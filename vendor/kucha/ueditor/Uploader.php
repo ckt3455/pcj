@@ -4,6 +4,12 @@ namespace kucha\ueditor;
 
 class Uploader
 {
+    public $type;
+    public $url;
+    public $state;
+    public $title;
+    public $original;
+    public $size;
     private $fileField; //文件域名
     private $file; //文件上传对象
     private $base64; //文件上传对象
@@ -264,20 +270,21 @@ class Uploader
         $format = str_replace("{hh}", $d[4], $format);
         $format = str_replace("{ii}", $d[5], $format);
         $format = str_replace("{ss}", $d[6], $format);
-        $format = str_replace("{time}", $t, $format);
+//        $format = str_replace("{time}{rand:6}", '', $format);
 
         //过滤文件名的非法自负,并替换文件名
         $oriName = substr($this->oriName, 0, strrpos($this->oriName, '.'));
         $oriName = preg_replace("/[\|\?\"\<\>\/\*\\\\]+/", '', $oriName);
-        $format = str_replace("{filename}", $oriName, $format);
+        $format = str_replace("{time}{rand:6}", $oriName, $format);
 
         //替换随机字符串
-//        $randNum = rand(1, 10000000000) . rand(1, 10000000000);
+//        $randNum = rand(1, 9999999) . rand(1, 9999999);
 //        if (preg_match("/\{rand\:([\d]*)\}/i", $format, $matches)) {
 //            $format = preg_replace("/\{rand\:[\d]*\}/i", substr($randNum, 0, $matches[1]), $format);
 //        }
 
         $ext = $this->getFileExt();
+
         return $format . $ext;
     }
 

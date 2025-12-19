@@ -718,9 +718,7 @@
                     var responseText = (ret._raw || ret),
                         json = utils.str2json(responseText);
                     if (json.state == 'SUCCESS') {
-                        //解决多图上传乱序
-                        _this.imageList[$file.index()] = json;
-                        //_this.imageList.push(json);
+                        _this.imageList.push(json);
                         $file.append('<span class="success"></span>');
                     } else {
                         $file.find('.error').text(json.state).show();
@@ -774,10 +772,6 @@
                 prefix = editor.getOpt('imageUrlPrefix');
             for (i = 0; i < this.imageList.length; i++) {
                 data = this.imageList[i];
-                //避免上传失败
-                if(data==undefined){
-                    continue;
-                }
                 list.push({
                     src: prefix + data.url,
                     _src: prefix + data.url,

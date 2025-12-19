@@ -2,11 +2,14 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use yii\helpers\Url;
 if($model->created_at>0){
     $model->created_at=date('Y-m-d', $model->created_at);
 }
 $message = Yii::$app->request->get('message');
-$model->describe = preg_replace('/<br\\s*?\/??>/i', '', $model->describe);
+if($model->describe){
+    $model->describe = preg_replace('/<br\\s*?\/??>/i', '', $model->describe);
+}
 $model->type = $message['type'];
 
 /* @var $this yii\web\View */
@@ -173,6 +176,9 @@ $model->type = $message['type'];
                 'clientOptions' => [
                     //编辑区域大小
                     'initialFrameHeight' => '300',
+                    'filebrowserUploadUrl' => Url::to(['/file2/upload-images']),
+                    'filebrowserUploadMethod' => 'form',
+
                 ]
             ]); ?>
 

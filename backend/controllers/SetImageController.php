@@ -23,6 +23,7 @@ class SetImageController extends MController
 {
     public function actions()
     {
+
         return [
             'index' => [
                 'class' => IndexAction::className(),
@@ -72,12 +73,13 @@ class SetImageController extends MController
                 'modelClass' => SetImage::className(),
             ],
             'upload' => [
-                'class' => 'kucha\ueditor\UEditorAction',
+                'class' => 'common\components\FixedUEditorAction',
                 'config' => [
                     //图片
-                    "imageUrlPrefix" => Yii::getAlias("@attachurl"),//图片访问路径前缀
-                    "imagePathFormat" => "/upload/image/{yyyy}/{mm}/{dd}/{time}{rand:6}", //上传保存路径
+                    "imageUrlPrefix" => '',//图片访问路径前缀
                     "imageRoot" => Yii::getAlias("@attachment"),//根目录地址
+                    'imageManagerListPath' => '/../attachment/images/',  // 对应 imagePathFormat 的父目
+
                     //视频
                     "videoUrlPrefix" => Yii::getAlias("@attachurl"),
                     "videoPathFormat" => "/upload/video/{yyyy}/{mm}/{dd}/{time}{rand:6}",
@@ -86,6 +88,24 @@ class SetImageController extends MController
                     "fileUrlPrefix" => Yii::getAlias("@attachurl"),
                     "filePathFormat" => "/upload/file/{yyyy}/{mm}/{dd}/{time}{rand:6}",
                     "fileRoot" => Yii::getAlias("@attachment"),
+                    'imageMaxSize' => 2048000,
+                    'scrawlMaxSize' => 2048000,
+                    'catcherMaxSize' => 2048000,
+                    'videoMaxSize' => 102400000,
+                    'fileMaxSize' => 51200000,
+                    'imageAllowFiles' => ['.png', '.jpg', '.jpeg', '.gif', '.bmp'],
+                    'scrawlAllowFiles' => ['.png'],
+                    'videoAllowFiles' => [
+                        '.flv', '.swf', '.mkv', '.avi', '.rm', '.rmvb', '.mpeg', '.mpg',
+                        '.ogg', '.ogv', '.mov', '.wmv', '.mp4', '.webm', '.mp3', '.wav', '.mid'
+                    ],
+                    'fileAllowFiles' => [
+                        '.png', '.jpg', '.jpeg', '.gif', '.bmp',
+                        '.flv', '.swf', '.mkv', '.avi', '.rm', '.rmvb', '.mpeg', '.mpg',
+                        '.ogg', '.ogv', '.mov', '.wmv', '.mp4', '.webm', '.mp3', '.wav', '.mid',
+                        '.rar', '.zip', '.tar', '.gz', '.7z', '.bz2', '.cab', '.iso',
+                        '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.pdf', '.txt', '.md', '.xml'
+                    ],
                 ],
             ]
         ];

@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\composer;
@@ -13,6 +13,7 @@ use Composer\Repository\InstalledRepositoryInterface;
 use Composer\Script\CommandEvent;
 use Composer\Script\Event;
 use Composer\Util\Filesystem;
+use React\Promise\PromiseInterface;
 
 /**
  * @author Qiang Xue <qiang.xue@gmail.com>
@@ -37,14 +38,25 @@ class Installer extends LibraryInstaller
      */
     public function install(InstalledRepositoryInterface $repo, PackageInterface $package)
     {
+        $afterInstall = function () use ($package) {
+            // add the package to yiisoft/extensions.php
+            $this->addPackage($package);
+            // ensure the yii2-dev package also provides Yii.php in the same place as yii2 does
+            if ($package->getName() == 'yiisoft/yii2-dev') {
+                $this->linkBaseYiiFiles();
+            }
+        };
+
         // install the package the normal composer way
-        parent::install($repo, $package);
-        // add the package to yiisoft/extensions.php
-        $this->addPackage($package);
-        // ensure the yii2-dev package also provides Yii.php in the same place as yii2 does
-        if ($package->getName() == 'yiisoft/yii2-dev') {
-            $this->linkBaseYiiFiles();
+        $promise = parent::install($repo, $package);
+
+        // Composer v2 might return a promise here
+        if ($promise instanceof PromiseInterface) {
+            return $promise->then($afterInstall);
         }
+
+        // If not, execute the code right away as parent::install executed synchronously (composer v1, or v2 without async)
+        $afterInstall();
     }
 
     /**
@@ -52,13 +64,25 @@ class Installer extends LibraryInstaller
      */
     public function update(InstalledRepositoryInterface $repo, PackageInterface $initial, PackageInterface $target)
     {
-        parent::update($repo, $initial, $target);
-        $this->removePackage($initial);
-        $this->addPackage($target);
-        // ensure the yii2-dev package also provides Yii.php in the same place as yii2 does
-        if ($initial->getName() == 'yiisoft/yii2-dev') {
-            $this->linkBaseYiiFiles();
+        $afterUpdate = function () use ($initial, $target) {
+            $this->removePackage($initial);
+            $this->addPackage($target);
+            // ensure the yii2-dev package also provides Yii.php in the same place as yii2 does
+            if ($initial->getName() == 'yiisoft/yii2-dev') {
+                $this->linkBaseYiiFiles();
+            }
+        };
+
+        // update the package the normal composer way
+        $promise = parent::update($repo, $initial, $target);
+
+        // Composer v2 might return a promise here
+        if ($promise instanceof PromiseInterface) {
+            return $promise->then($afterUpdate);
         }
+
+        // If not, execute the code right away as parent::update executed synchronously (composer v1, or v2 without async)
+        $afterUpdate();
     }
 
     /**
@@ -66,14 +90,25 @@ class Installer extends LibraryInstaller
      */
     public function uninstall(InstalledRepositoryInterface $repo, PackageInterface $package)
     {
+        $afterUninstall = function () use ($package) {
+            // remove the package from yiisoft/extensions.php
+            $this->removePackage($package);
+            // remove links for Yii.php
+            if ($package->getName() == 'yiisoft/yii2-dev') {
+                $this->removeBaseYiiFiles();
+            }
+        };
+
         // uninstall the package the normal composer way
-        parent::uninstall($repo, $package);
-        // remove the package from yiisoft/extensions.php
-        $this->removePackage($package);
-        // remove links for Yii.php
-        if ($package->getName() == 'yiisoft/yii2-dev') {
-            $this->removeBaseYiiFiles();
+        $promise = parent::uninstall($repo, $package);
+
+        // Composer v2 might return a promise here
+        if ($promise instanceof PromiseInterface) {
+            return $promise->then($afterUninstall);
         }
+
+        // If not, execute the code right away as parent::uninstall executed synchronously (composer v1, or v2 without async)
+        $afterUninstall();
     }
 
     protected function addPackage(PackageInterface $package)
@@ -205,9 +240,9 @@ class Installer extends LibraryInstaller
 /**
  * This is a link provided by the yiisoft/yii2-dev package via yii2-composer plugin.
  *
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 return require(__DIR__ . '/../yii2-dev/framework/$file');
@@ -310,12 +345,22 @@ EOF
 
     protected static function generateRandomString()
     {
-        if (!extension_loaded('openssl')) {
-            throw new \Exception('The OpenSSL PHP extension is required by Yii2.');
-        }
         $length = 32;
-        $bytes = openssl_random_pseudo_bytes($length);
+        $bytes = self::generateRandomBytes($length);
         return strtr(substr(base64_encode($bytes), 0, $length), '+/=', '_-.');
+    }
+
+    protected static function generateRandomBytes($length)
+    {
+        if (function_exists('random_bytes')) {
+            return random_bytes($length);
+        }
+
+        if (extension_loaded('openssl')) {
+            return openssl_random_pseudo_bytes($length);
+        }
+
+        throw new \Exception('PHP >= 7.0 or the OpenSSL PHP extension is required by Yii2.');
     }
 
     /**

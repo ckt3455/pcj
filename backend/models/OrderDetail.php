@@ -1,58 +1,1 @@
-<?php
-
-namespace backend\models;
-
-use Yii;
-
-/**
- * This is the model class for table "{{%order_detail}}".
- *
- * @property string $id
- * @property string $goods_id
- * @property string $goods_title
- * @property string $goods_image
- * @property string $number
- * @property string $money
- * @property string $price
- * @property string $order_id
- */
-class OrderDetail extends \yii\db\ActiveRecord
-{
-    /**
-     * @inheritdoc
-     */
-    public static function tableName()
-    {
-        return '{{%order_detail}}';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function rules()
-    {
-        return [
-            [['goods_id', 'number', 'order_id','number2'], 'integer'],
-            [['money', 'price'], 'number'],
-            [['goods_title'], 'string', 'max' => 100],
-            [['goods_image'], 'string', 'max' => 255],
-        ];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => 'ID',
-            'goods_id' => 'Goods ID',
-            'goods_title' => 'Goods Title',
-            'goods_image' => 'Goods Image',
-            'number' => 'Number',
-            'money' => 'Money',
-            'price' => 'Price',
-            'order_id' => 'Order ID',
-        ];
-    }
-}
+<?phpnamespace backend\models;use Yii;/** * This is the model class for table "zs_order_detail". * * @property integer $id * @property integer $order_id * @property integer $goods_id * @property integer $sku_id * @property integer $number */class OrderDetail extends \yii\db\ActiveRecord{    /**     * @inheritdoc     */    public static function tableName()    {        return '{{%order_detail}}';    }    /**     * @inheritdoc     */    public function rules()    {        return [            [['order_id', 'goods_id', 'sku_id', 'number'], 'required'],            [['order_id', 'goods_id', 'sku_id', 'number'], 'integer'],            [['period'],'string'],        ];    }    /**     * @inheritdoc     */    public function attributeLabels()    {        return [            'id' => 'ID',            'order_id' => 'Order ID',            'goods_id' => 'Goods ID',            'sku_id' => 'Sku ID',            'number' => 'Number',            'original_price'=>'原价',            'price'=>'价格',            'period'=>'货期'        ];    }    /**     * 关联订单     */    public function getOrder(){        return $this->hasOne(Order::className(), ['id' => 'order_id']);    }    /**     * 关联产品     */    public function getGoods(){        return $this->hasOne(Goods::className(), ['id' => 'goods_id']);    }    /**     * 关联sku     */    public function getSku(){        return $this->hasOne(Sku::className(), ['id' => 'sku_id']);    }}

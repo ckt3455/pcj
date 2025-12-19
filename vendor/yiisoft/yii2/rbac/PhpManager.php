@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\rbac;
@@ -23,7 +23,7 @@ use yii\helpers\VarDumper;
  * (for example, the authorization data for a personal blog system).
  * Use [[DbManager]] for more complex authorization data.
  *
- * Note that PhpManager is not compatible with facebooks [HHVM](http://hhvm.com/) because
+ * Note that PhpManager is not compatible with facebooks [HHVM](https://hhvm.com/) because
  * it relies on writing php files and including them afterwards which is not supported by HHVM.
  *
  * For more details and usage information on PhpManager, see the [guide article on security authorization](guide:security-authorization).
@@ -134,7 +134,7 @@ class PhpManager extends BaseManager
             return false;
         }
 
-        /* @var $item Item */
+        /** @var Item $item */
         $item = $this->items[$itemName];
         Yii::debug($item instanceof Role ? "Checking role: $itemName" : "Checking permission : $itemName", __METHOD__);
 
@@ -208,7 +208,7 @@ class PhpManager extends BaseManager
             return false;
         }
         foreach ($this->children[$child->name] as $grandchild) {
-            /* @var $grandchild Item */
+            /** @var Item $grandchild */
             if ($this->detectLoop($parent, $grandchild)) {
                 return true;
             }
@@ -320,7 +320,7 @@ class PhpManager extends BaseManager
         $items = [];
 
         foreach ($this->items as $name => $item) {
-            /* @var $item Item */
+            /** @var Item $item */
             if ($item->type == $type) {
                 $items[$name] = $item;
             }
@@ -796,7 +796,7 @@ class PhpManager extends BaseManager
      */
     protected function saveToFile($data, $file)
     {
-        file_put_contents($file, "<?php\nreturn " . VarDumper::export($data) . ";\n", LOCK_EX);
+        file_put_contents($file, "<?php\n\nreturn " . VarDumper::export($data) . ";\n", LOCK_EX);
         $this->invalidateScriptCache($file);
     }
 
@@ -822,7 +822,7 @@ class PhpManager extends BaseManager
     {
         $items = [];
         foreach ($this->items as $name => $item) {
-            /* @var $item Item */
+            /** @var Item $item */
             $items[$name] = array_filter(
                 [
                     'type' => $item->type,
@@ -833,7 +833,7 @@ class PhpManager extends BaseManager
             );
             if (isset($this->children[$name])) {
                 foreach ($this->children[$name] as $child) {
-                    /* @var $child Item */
+                    /** @var Item $child */
                     $items[$name]['children'][] = $child->name;
                 }
             }
@@ -849,7 +849,7 @@ class PhpManager extends BaseManager
         $assignmentData = [];
         foreach ($this->assignments as $userId => $assignments) {
             foreach ($assignments as $name => $assignment) {
-                /* @var $assignment Assignment */
+                /** @var Assignment $assignment */
                 $assignmentData[$userId][] = $assignment->roleName;
             }
         }

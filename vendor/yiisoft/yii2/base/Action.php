@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\base;
@@ -30,8 +30,10 @@ use Yii;
  *
  * For more details and usage information on Action, see the [guide article on actions](guide:structure-controllers).
  *
- * @property string $uniqueId The unique ID of this action among the whole application. This property is
- * read-only.
+ * @template T of Controller
+ * @property-read string $uniqueId The unique ID of this action among the whole application.
+ * @phpstan-property T $controller
+ * @psalm-property T $controller
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
@@ -44,6 +46,9 @@ class Action extends Component
     public $id;
     /**
      * @var Controller|\yii\web\Controller|\yii\console\Controller the controller that owns this action
+     *
+     * @phpstan-var T
+     * @psalm-var T
      */
     public $controller;
 
@@ -54,6 +59,9 @@ class Action extends Component
      * @param string $id the ID of this action
      * @param Controller $controller the controller that owns this action
      * @param array $config name-value pairs that will be used to initialize the object properties
+     *
+     * @phpstan-param array<string, mixed> $config
+     * @psalm-param array<string, mixed> $config
      */
     public function __construct($id, $controller, $config = [])
     {
@@ -86,7 +94,7 @@ class Action extends Component
             throw new InvalidConfigException(get_class($this) . ' must define a "run()" method.');
         }
         $args = $this->controller->bindActionParams($this, $params);
-        Yii::debug('Running action: ' . get_class($this) . '::run(), invoked by '  . get_class($this->controller), __METHOD__);
+        Yii::debug('Running action: ' . get_class($this) . '::run(), invoked by ' . get_class($this->controller), __METHOD__);
         if (Yii::$app->requestedParams === null) {
             Yii::$app->requestedParams = $args;
         }

@@ -6,7 +6,7 @@
  */
 namespace dosamigos\qrcode\lib;
 
-use yii\base\BaseObject;
+use yii\base\Object;
 
 /**
  * Class FrameFiller
@@ -19,7 +19,7 @@ use yii\base\BaseObject;
  * @link http://www.2amigos.us/
  * @package dosamigos\qrcode\lib
  */
-class FrameFiller extends BaseObject
+class FrameFiller extends Object
 {
     public $width;
     public $frame;

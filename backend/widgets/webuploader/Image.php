@@ -94,7 +94,8 @@ class Image extends InputWidget
 
         $attribute = str_replace("[]","",$this->attribute);
 
-        $value = trim($this->hasModel() ? Html::getAttributeValue($this->model, $attribute) : $this->value);
+        $value = trim((string)($this->hasModel() ? Html::getAttributeValue($this->model, $attribute) : $this->value));
+
 
         return $this->render('index', [
             'name'          => $this->name!=="fileinput"? $this->name:Html::getInputName($this->model, $this->attribute),

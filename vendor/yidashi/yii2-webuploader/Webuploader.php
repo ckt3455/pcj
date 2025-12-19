@@ -43,7 +43,7 @@ class Webuploader extends InputWidget{
         if($this->hasModel()){
             $this->hiddenInput = Html::activeHiddenInput($this->model, $this->attribute);
         }else{
-            $this->hiddenInput = Html::hiddenInput($this->name, $this->value,['id'=>$this->options['id']]);
+            $this->hiddenInput = Html::hiddenInput($this->name, $this->value);
         }
     }
     public function run()
@@ -51,10 +51,10 @@ class Webuploader extends InputWidget{
         call_user_func([$this, 'register' . ucfirst($this->driver) . 'ClientJs']);
         $value = $this->hasModel() ? Html::getAttributeValue($this->model, $this->attribute) : $this->value;
         // 已经传过图片,显示预览图
-        $image = $value ? Html::img($value,
+        $image = $value ? Html::img(
+                strpos($value, 'http:') === false ? (\Yii::getAlias('@static') . '/' . $value) : $value,
                 ['width'=>$this->options['previewWidth'],'height'=>$this->options['previewHeight']]
         ) : '';
-
         return $this->render('main', [
             'boxId' => $this->options['boxId'],
             'hiddenInput' => $this->hiddenInput,
@@ -76,8 +76,7 @@ var uploader = WebUploader.create({
         auto: true,
         fileVal: 'file',
         // swf文件路径
-        //swf: '{$swfPath}/Uploader.swf',
-        swf: '/Uploader.swf',
+        swf: '{$swfPath}/Uploader.swf',
 
         // 文件接收服务端。gy
         server: '{$server}',

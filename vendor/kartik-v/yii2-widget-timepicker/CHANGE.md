@@ -1,6 +1,34 @@
 Change Log: `yii2-widget-timepicker`
 ====================================
 
+## Version 1.0.5
+
+**Date:** 28-Oct-2021
+
+- Enhancements to support Bootstrap v5.x.
+
+## Version 1.0.4
+
+**Date:** 09-Oct-2018
+
+- Bump composer version dependencies.
+- Add Bootstrap 4.x support.
+- Reorganize source code in `src` directory.
+
+## Version 1.0.3
+
+**Date:** 08-Jan-2017
+
+- (enh #12): Correct timepicker change initialization.
+
+## Version 1.0.2
+
+**Date:** 04-Jan-2017
+
+- (enh #12): Prevent timepicker plugin triggering change on init.
+- Add github contribution and issue/PR logging templates.
+- Add branch alias for dev-master latest release.
+
 ## Version 1.0.1
 
 **Date:** 12-Jan-2016

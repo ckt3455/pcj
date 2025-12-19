@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\grid;
@@ -137,7 +137,7 @@ class GridView extends BaseListView
      */
     public $showOnEmpty = true;
     /**
-     * @var array|Formatter the formatter used to format model attribute values into displayable texts.
+     * @var array|Formatter|null the formatter used to format model attribute values into displayable texts.
      * This can be either an instance of [[Formatter]] or an configuration array for creating the [[Formatter]]
      * instance. If this property is not set, the "formatter" application component will be used.
      */
@@ -148,14 +148,14 @@ class GridView extends BaseListView
      *
      * ```php
      * [
-     *     ['class' => SerialColumn::className()],
+     *     ['class' => SerialColumn::class],
      *     [
-     *         'class' => DataColumn::className(), // this line is optional
+     *         'class' => DataColumn::class, // this line is optional
      *         'attribute' => 'name',
      *         'format' => 'text',
      *         'label' => 'Name',
      *     ],
-     *     ['class' => CheckboxColumn::className()],
+     *     ['class' => CheckboxColumn::class],
      * ]
      * ```
      *
@@ -202,7 +202,7 @@ class GridView extends BaseListView
      */
     public $emptyCell = '&nbsp;';
     /**
-     * @var \yii\base\Model the model that keeps the user-entered filter data. When this property is set,
+     * @var \yii\base\Model|null the model that keeps the user-entered filter data. When this property is set,
      * the grid view will enable column-based filtering. Each data column by default will display a text field
      * at the top that users can fill in to filter the data.
      *
@@ -214,7 +214,7 @@ class GridView extends BaseListView
      */
     public $filterModel;
     /**
-     * @var string|array the URL for returning the filtering result. [[Url::to()]] will be called to
+     * @var string|array|null the URL for returning the filtering result. [[Url::to()]] will be called to
      * normalize the URL. If not set, the current controller action will be used.
      * When the user makes change to any filter input, the current filtering inputs will be appended
      * as GET parameters to this URL.
@@ -359,7 +359,7 @@ class GridView extends BaseListView
 
         $tableFooter = false;
         $tableFooterAfterBody = false;
-        
+
         if ($this->showFooter) {
             if ($this->placeFooterAfterBody) {
                 $tableFooterAfterBody = $this->renderTableFooter();
@@ -400,7 +400,7 @@ class GridView extends BaseListView
     public function renderColumnGroup()
     {
         foreach ($this->columns as $column) {
-            /* @var $column Column */
+            /** @var Column $column */
             if (!empty($column->options)) {
                 $cols = [];
                 foreach ($this->columns as $col) {
@@ -422,7 +422,7 @@ class GridView extends BaseListView
     {
         $cells = [];
         foreach ($this->columns as $column) {
-            /* @var $column Column */
+            /** @var Column $column */
             $cells[] = $column->renderHeaderCell();
         }
         $content = Html::tag('tr', implode('', $cells), $this->headerRowOptions);
@@ -443,7 +443,7 @@ class GridView extends BaseListView
     {
         $cells = [];
         foreach ($this->columns as $column) {
-            /* @var $column Column */
+            /** @var Column $column */
             $cells[] = $column->renderFooterCell();
         }
         $content = Html::tag('tr', implode('', $cells), $this->footerRowOptions);
@@ -463,7 +463,7 @@ class GridView extends BaseListView
         if ($this->filterModel !== null) {
             $cells = [];
             foreach ($this->columns as $column) {
-                /* @var $column Column */
+                /** @var Column $column */
                 $cells[] = $column->renderFilterCell();
             }
 
@@ -520,7 +520,7 @@ class GridView extends BaseListView
     public function renderTableRow($model, $key, $index)
     {
         $cells = [];
-        /* @var $column Column */
+        /** @var Column $column */
         foreach ($this->columns as $column) {
             $cells[] = $column->renderDataCell($model, $key, $index);
         }

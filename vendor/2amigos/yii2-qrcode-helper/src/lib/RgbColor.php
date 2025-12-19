@@ -7,7 +7,7 @@
 namespace dosamigos\qrcode\lib;
 
 use yii\base\InvalidParamException;
-use yii\base\BaseObject;
+use yii\base\Object;
 
 /**
  * Class RgbColor
@@ -20,7 +20,7 @@ use yii\base\BaseObject;
  * @link http://www.2amigos.us/
  * @package dosamigos\qrcode\lib
  */
-class RgbColor extends BaseObject
+class RgbColor extends Object
 {
     /**
      * @var array

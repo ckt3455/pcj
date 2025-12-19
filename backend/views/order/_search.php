@@ -17,6 +17,7 @@ use yii\widgets\ActiveForm;
             <div class="ibox-content">
 
                 <?php $form = ActiveForm::begin([
+                    'action' => ['index'],
                     'method' => 'get',
                     'options' => ['class' => 'form-horizontal'],
                     'fieldConfig' => [
@@ -26,8 +27,32 @@ use yii\widgets\ActiveForm;
 
                 ]); ?>
 
+
+
                 <?= $form->field($model, 'order_number', ['options' => ['tag' => false]]) ?>
 
+                <?= $form->field($model, 'time1',['options' => ['tag' => false]])->widget(
+                    \kartik\datetime\DateTimePicker::className(),[
+                        'pluginOptions' => [
+                            'language' => 'zh-CN',
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true,
+                            'autoclose' => true,
+                            'todayBtn'=>true,
+                            'minView'=>'month'
+                        ]]
+                )->label('开始时间') ?>
+                <?= $form->field($model, 'time2',['options' => ['tag' => false]])->widget(
+                    \kartik\datetime\DateTimePicker::className(),[
+                        'pluginOptions' => [
+                            'language' => 'zh-CN',
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true,
+                            'autoclose' => true,
+                            'todayBtn'=>true,
+                            'minView'=>'month'
+                        ]]
+                )->label('结束时间') ?>
 
                 <?= $form->field($model, 'user_id', ['options' => ['tag' => false]])->widget(\kartik\select2\Select2::className(), [
                     'data' => \backend\models\User::getList2(),
@@ -37,63 +62,16 @@ use yii\widgets\ActiveForm;
                     ]
                 ]) ?>
 
-                <?php echo $form->field($model, 'status', ['options' => ['tag' => false]])->dropDownList(\backend\models\Order::$status_message, ['prompt' => '']) ?>
 
-                <?php echo $form->field($model, 'province', ['options' => ['tag' => false]]) ?>
-
-                <?php echo $form->field($model, 'city', ['options' => ['tag' => false]]) ?>
-
-                <?php echo $form->field($model, 'area', ['options' => ['tag' => false]]) ?>
-
-
-                <?php echo $form->field($model, 'contact', ['options' => ['tag' => false]]) ?>
+                <?= $form->field($model, 'consignee', ['options' => ['tag' => false]]) ?>
 
                 <?php echo $form->field($model, 'phone', ['options' => ['tag' => false]]) ?>
 
 
-                <?= $form->field($model, 'content', ['options' => ['tag' => false]]) ?>
-                <?= $form->field($model, 'start_time', ['options' => ['tag' => false]])->widget(
-                    \kartik\datetime\DateTimePicker::className(), [
-                        'pluginOptions' => [
-                            'language' => 'zh-CN',
-                            'format' => 'yyyy-mm-dd',
-                            'todayHighlight' => true,
-                            'autoclose' => true,
-                            'todayBtn' => true,
-                            'minView' => 'month',
-
-                        ]]
-                )->label('开始时间') ?>       <?= $form->field($model, 'end_time', ['options' => ['tag' => false]])->widget(
-                    \kartik\datetime\DateTimePicker::className(), [
-                        'pluginOptions' => [
-                            'language' => 'zh-CN',
-                            'format' => 'yyyy-mm-dd',
-                            'todayHighlight' => true,
-                            'autoclose' => true,
-                            'todayBtn' => true,
-                            'minView' => 'month',
-
-                        ]]
-                )->label('结束时间') ?>    <?php // echo  $form->field($model, 'updated_at',['options'=>['tag'=>false]]) ?>
-
-                <?php // echo  $form->field($model, 'pay_status',['options'=>['tag'=>false]]) ?>
-
-                <?php // echo  $form->field($model, 'paid_time',['options'=>['tag'=>false]]) ?>
-
-                <?php // echo  $form->field($model, 'express',['options'=>['tag'=>false]]) ?>
-
-                <?php // echo  $form->field($model, 'express_number',['options'=>['tag'=>false]]) ?>
-
-                <?php // echo  $form->field($model, 'fh_time',['options'=>['tag'=>false]]) ?>
-
-                <?php // echo  $form->field($model, 'finish_time',['options'=>['tag'=>false]]) ?>
-
-                <?php // echo  $form->field($model, 'order_number',['options'=>['tag'=>false]]) ?>
 
                 <div class="pull-right col-xs-12 col-sm-2 col-md-2 col-lg-2">
                     <?= Html::submitButton('搜索', ['class' => 'btn btn-primary']) ?>
-<!--                    <a class="btn btn-primary" href=" --><?php //= \yii\helpers\Url::to(['daochu','message'=>Yii::$app->request->get()])?><!--">导出</a>-->
-
+<!--                    <a href="--><?php //echo \yii\helpers\Url::to(['order-out','message'=>Yii::$app->request->get()])?><!--" class="btn btn-primary">导出</a>-->
                 </div>
 
                 <?php ActiveForm::end(); ?>

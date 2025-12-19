@@ -10,23 +10,14 @@ use yii\web\AssetBundle;
  */
 class JsTreeAsset extends AssetBundle
 {
-    public function init()
-    {
-        $this->setSourcePath(__DIR__ . '/assets');
-        parent::init();
-    }
-
+    public $sourcePath = __DIR__ . '/assets';
     public $js = [
         'jstree.min.js',
     ];
     public $css = [
-        'css/style.min.css'
+        '/css/style.min.css'
     ];
     public $depends = [
         'yii\web\YiiAsset',
     ];
-    protected function setSourcePath($path)
-    {
-            $this->sourcePath = $path;
-    }
 }

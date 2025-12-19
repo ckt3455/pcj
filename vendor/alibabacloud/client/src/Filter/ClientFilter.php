@@ -35,7 +35,14 @@ class ClientFilter
             );
         }
 
-        return $regionId;
+        if (!preg_match("/^[a-zA-Z0-9_-]+$/", $regionId)) {
+            throw new ClientException(
+                'Invalid Region ID',
+                SDK::INVALID_ARGUMENT
+            );
+        }
+
+        return strtolower($regionId);
     }
 
     /**

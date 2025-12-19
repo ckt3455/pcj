@@ -503,11 +503,7 @@
                     var responseText = (ret._raw || ret),
                         json = utils.str2json(responseText);
                     if (json.state == 'SUCCESS') {
-
-                        //解决多图乱序
-                        _this.fileList[$file.index()]=json;
-                        //_this.fileList.push(json);
-
+                        _this.fileList.push(json);
                         $file.append('<span class="success"></span>');
                     } else {
                         $file.find('.error').text(json.state).show();
@@ -557,10 +553,6 @@
                 prefix = editor.getOpt('fileUrlPrefix');
             for (i = 0; i < this.fileList.length; i++) {
                 data = this.fileList[i];
-                //避免上传失败
-                if(data==undefined){
-                    continue;
-                }
                 link = data.url;
                 list.push({
                     title: data.original || link.substr(link.lastIndexOf('/') + 1),

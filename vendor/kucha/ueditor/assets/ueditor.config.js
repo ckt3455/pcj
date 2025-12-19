@@ -375,6 +375,7 @@
             basePath = docUrl + "" + confUrl;
 
         }
+
         return optimizationPath(basePath);
 
     }

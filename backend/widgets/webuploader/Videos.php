@@ -96,7 +96,8 @@ class Videos extends InputWidget
 
         $attribute = str_replace("[]","",$this->attribute);
 
-        $value = trim($this->hasModel() ? Html::getAttributeValue($this->model, $attribute) : $this->value);
+        $value = trim((string)($this->hasModel() ? Html::getAttributeValue($this->model, $attribute) : $this->value));
+
 
         return $this->render('videos', [
             'name'          => $this->hasModel() ? Html::getInputName($this->model, $this->attribute) : $this->name,

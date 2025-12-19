@@ -18,10 +18,10 @@ class GoodsSearch extends Goods
     public function rules()
     {
         return [
-            [['id', 'sales', 'number', 'give_number'], 'integer'],
-            [['title', 'content'], 'safe'],
-            [['price'], 'number'],
-            [['start_time','end_time','type'],'safe']
+            [['id', 'category_id', 'has_option', 'sales', 'status', 'sort', 'stock', 'stock_warning', 'freight_model_id', 'append', 'updated', 'is_del'], 'integer'],
+            [['title', 'sub_title', 'thumb', 'thumbs', 'thumb_video', 'content', 'upc_code', 'intro', 'units', 'hot', 'associated_goods'], 'safe'],
+            [['price', 'crossed_price', 'weight', 'score'], 'number'],
+            [['start_time','end_time'],'safe']
         ];
     }
 
@@ -54,7 +54,6 @@ class GoodsSearch extends Goods
             'query' => $query,
                 'sort' => [
                     'defaultOrder' => [
-                        'sort'=>SORT_ASC,
                         'id'=>SORT_DESC,
                     ]
                 ],
@@ -71,15 +70,34 @@ class GoodsSearch extends Goods
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'category_id' => $this->category_id,
+            'has_option' => $this->has_option,
             'price' => $this->price,
+            'crossed_price' => $this->crossed_price,
             'sales' => $this->sales,
-            'number' => $this->number,
-            'give_number' => $this->give_number,
-            'type'=>$this->type,
+            'status' => $this->status,
+            'sort' => $this->sort,
+            'weight' => $this->weight,
+            'stock' => $this->stock,
+            'stock_warning' => $this->stock_warning,
+            'score' => $this->score,
+            'freight_model_id' => $this->freight_model_id,
+            'append' => $this->append,
+            'updated' => $this->updated,
+            'is_del' => $this->is_del,
         ]);
 
         $query->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'content', $this->content]);
+            ->andFilterWhere(['like', 'sub_title', $this->sub_title])
+            ->andFilterWhere(['like', 'thumb', $this->thumb])
+            ->andFilterWhere(['like', 'thumbs', $this->thumbs])
+            ->andFilterWhere(['like', 'thumb_video', $this->thumb_video])
+            ->andFilterWhere(['like', 'content', $this->content])
+            ->andFilterWhere(['like', 'upc_code', $this->upc_code])
+            ->andFilterWhere(['like', 'intro', $this->intro])
+            ->andFilterWhere(['like', 'units', $this->units])
+            ->andFilterWhere(['like', 'hot', $this->hot])
+            ->andFilterWhere(['like', 'associated_goods', $this->associated_goods]);
 
         if (!empty($this->start_time)) {
             $query->andFilterWhere(['>=', 'created_at', strtotime($this->start_time)]);

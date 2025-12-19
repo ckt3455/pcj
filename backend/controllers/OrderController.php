@@ -1,286 +1,1 @@
-<?php
-
-namespace backend\controllers;
-use backend\search\UserHistorySearch;
-use common\components\Helper;
-use moonland\phpexcel\Excel;
-use Yii;
-use backend\search\OrderSearch;
-use backend\models\Order;
-use backend\actions\CreateAction;
-use backend\actions\UpdateAction;
-use backend\actions\IndexAction;
-use backend\actions\DeleteAction;
-
-
-/**
- * OrderController implements the CRUD actions for Order model.
- */
-class OrderController extends MController
-{
-    public function actions()
-    {
-        return [
-            'index' => [
-                'class' => IndexAction::className(),
-                'modelClass' => Order::className(),
-                'data' => function () {
-                    $searchModel = new OrderSearch();
-                    $searchModel->type = 1;
-                    $dataProvider = $searchModel->search(Yii::$app->getRequest()->getQueryParams());
-                    return [
-                        'dataProvider' => $dataProvider,
-                        'searchModel' => $searchModel,
-                    ];
-
-                }
-            ],
-            'index2' => [
-                'class' => IndexAction::className(),
-                'modelClass' => Order::className(),
-                'data' => function () {
-
-                    $searchModel = new OrderSearch();
-                    $searchModel->type = 2;
-                    $dataProvider = $searchModel->search(Yii::$app->getRequest()->getQueryParams());
-                    return [
-                        'dataProvider' => $dataProvider,
-                        'searchModel' => $searchModel,
-                    ];
-
-                }
-            ],
-
-            'index3' => [
-                'class' => IndexAction::className(),
-                'modelClass' => Order::className(),
-                'data' => function () {
-
-                    $searchModel = new OrderSearch();
-                    $searchModel->type = 3;
-                    $dataProvider = $searchModel->search(Yii::$app->getRequest()->getQueryParams());
-                    return [
-                        'dataProvider' => $dataProvider,
-                        'searchModel' => $searchModel,
-                    ];
-
-                }
-            ],
-
-            'index4' => [
-                'class' => IndexAction::className(),
-                'modelClass' => Order::className(),
-                'data' => function () {
-
-                    $searchModel = new OrderSearch();
-                    $searchModel->type = 4;
-                    $dataProvider = $searchModel->search(Yii::$app->getRequest()->getQueryParams());
-                    return [
-                        'dataProvider' => $dataProvider,
-                        'searchModel' => $searchModel,
-                    ];
-
-                }
-            ],
-            'create' => [
-                'class' => CreateAction::className(),
-                'modelClass' => Order::className(),
-            ],
-            'update' => [
-                'class' => UpdateAction::className(),
-                'modelClass' => Order::className(),
-            ],
-            'delete' => [
-                'class' => DeleteAction::className(),
-                'modelClass' => Order::className(),
-            ],
-        ];
-    }
-
-    public function actionPaid()
-    {
-
-        $id = Yii::$app->request->get('id');
-        $name='order_'.$id;
-        $session=  Yii::$app->session->get($name);
-        $order_paid_cache=Yii::$app->cache->get('order_paid_cache');
-        if($order_paid_cache){
-            return $this->message('上一条订单还未计算完成，请稍后再试',$this->redirect(Yii::$app->request->referrer),'error');
-        }
-        if(time()-$session<=120){
-            return $this->message('该订单已被锁定，请稍后再试',$this->redirect(Yii::$app->request->referrer),'error');
-        }else{
-            Yii::$app->session->set($name,time());
-        }
-        Yii::$app->cache->set('order_paid',time(),300);
-        $data = Order::order_paid($id);
-        Yii::$app->cache->delete('order_paid');
-        if ($data['error'] == 0) {
-            return $this->redirect(Yii::$app->request->referrer);
-        } else {
-            return $this->message($data['message'], $this->redirect(Yii::$app->request->referrer),'error',10);
-        }
-    }
-
-
-    /**
-     * 确认发货
-     */
-
-    public function actionShipping()
-    {
-
-        $id = Yii::$app->request->get('id');
-
-        $order = Order::findOne($id);
-
-        //更新订单状态
-
-        if ($order->status == 2) {
-            $order->status = 3;
-            $order->fh_time = time();
-            $order->express_number = Yii::$app->request->get('express_number');
-            $order->express = Yii::$app->request->get('express_name');
-            $order->save();
-            return $this->message('成功', $this->redirect(Yii::$app->request->referrer), 'success');
-        } else {
-
-            return $this->message('发生错误', $this->redirect(Yii::$app->request->referrer), 'error');
-
-        }
-
-
-    }
-
-
-    public function actionFinish($id)
-    {
-        $order = Order::findOne($id);
-        if ($order->status == 3) {
-            $order->status = 4;
-            $order->finish_time = time();
-            $order->save();
-            return $this->message('成功', $this->redirect(Yii::$app->request->referrer), 'success');
-        } else {
-            return $this->message('发生错误', $this->redirect(Yii::$app->request->referrer), 'error');
-        }
-    }
-
-
-
-    public function actionTongji(){
-
-        $money=Order::find()->where(['>=','status',2])->andWhere(['in','type',[1,3]])->sum('money');
-        //默认显示当月
-        $start_time=Yii::$app->request->get('OrderSearch')['start_time'];
-        if(!$start_time){
-            $start_time=date('Y-m-01',time());
-        }
-
-        $end_time=Yii::$app->request->get('OrderSearch')['end_time'];
-        if(!$end_time){
-            $end_time=date('Y-m-d',time());
-        }
-
-        $start=strtotime($start_time);
-        $end=strtotime($end_time)+24*3600-1;
-
-        $searchModel = new OrderSearch();
-        $searchModel->start_time=date('Y-m-d',$start);
-        $searchModel->end_time=date('Y-m-d',$end);
-
-        $dataProvider = $searchModel->search(Yii::$app->getRequest()->getQueryParams());
-
-        $money2=$dataProvider->query->where(['>=','status',2])->andWhere(['in','type',[1,3]])->andWhere(['>=','created_at',$start])->andWhere(['<=','created_at',$end])->sum('money')*1;
-        $money_ls=Order::find()->where(['>=','status',2])->andWhere(['type'=>4])->sum('money')*0.8;
-        $money2=$money_ls+$money2;
-        return $this->render('tongji',['money'=>$money,'money2'=>$money2,'searchModel'=>$searchModel,'dataProvider'=>$dataProvider]);
-    }
-
-
-    public function actionFenhong()
-    {
-        $data=Order::order_money();
-        if($data['error']==0){
-            return $this->message('分红成功',$this->redirect(Yii::$app->request->referrer));
-        }else{
-            return $this->message($data['message'],$this->redirect(Yii::$app->request->referrer),'error');
-        }
-
-    }
-
-
-
-    //导出
-    public function actionDaochu()
-    {
-        ini_set('memory_limit', '3072M');    // 临时设置最大内存占用为3G
-        set_time_limit(0);
-        $search = new OrderSearch();
-        $url = Yii::$app->request->referrer;
-        $data = $search->search(Yii::$app->request->get('message'));
-        $count = $data->query->count();
-        if ($count == 0) {
-            return $this->redirect(Yii::$app->request->referrer);
-        }
-        if ($count > 50000) {
-            return $this->message('每次最多导出50000条数据', $this->redirect(Yii::$app->request->referrer), 'error');
-        }
-
-        $model = $data->query->orderBy('id desc')->all();
-        Excel::export([
-            'models' => $model,
-            'fileName' => '订单记录' . date('Y-m-d') . '.xlsx',
-            'columns' => [
-                'order_number',
-                [
-                    'attribute' => 'user_id',
-                    'value' =>function($data){
-                        return $data->user['mobile'].'-'.$data->user['name'];
-                    }
-                ],
-                'type',
-                'money',
-                'province',
-                'city',
-                'area',
-                'address',
-                [
-                    'header'=>'商品',
-                    'value'=>function($data){
-                        $html=[];
-                        foreach ($data->detail as $v){
-                            $html[]=$v['goods_title'].'-'.$v['number'];
-                        }
-                        return implode('|',$html);
-                    }
-                ],
-                [
-                    'attribute' => 'status',
-                    'value' =>function($data){
-                        return \backend\models\Order::$status_message[$data->status];
-                    }
-                ],
-                'contact',
-                'phone',
-                'created_at:datetime',
-                'paid_time:datetime',
-                [
-                    'attribute' => 'express',
-                    'class' => 'kartik\grid\EditableColumn'
-                ],
-                [
-                    'attribute' => 'express_number',
-                    'class' => 'kartik\grid\EditableColumn'
-                ],
-                [
-                    'attribute' => 'content',
-                    'class' => 'kartik\grid\EditableColumn'
-                ],
-
-            ]
-        ]);
-        return $this->redirect(Yii::$app->request->referrer);
-    }
-
-}
+<?phpnamespace backend\controllers;use backend\models\Goods;use backend\models\OrderDetail;use backend\models\PayMethod;use backend\models\StockRecord;use Yii;use backend\search\OrderSearch;use backend\models\Order;use backend\actions\IndexAction;use backend\models\Sku;use yii\db\Exception;use yii\helpers\Url;use moonland\phpexcel\Excel;/** * OrderController implements the CRUD actions for Order model. */class OrderController extends MController{    public function actions()    {        return [            'index' => [                'class' => IndexAction::className(),                'modelClass' => Order::className(),                'data' => function(){                                            $searchModel = new OrderSearch();                        $dataProvider = $searchModel->search(yii::$app->getRequest()->getQueryParams());                        return [                            'dataProvider' => $dataProvider,                            'searchModel' => $searchModel,                        ];                                    }            ],        ];    }    public function actionCreate(){        $model=new Order();        $model->loadDefaultValues();        if(Yii::$app->request->post()){            $post=Yii::$app->request->post();            $tr = Yii::$app->db->beginTransaction();            try {                $model->load($post);                if(!$model->save()){                    $error=$model->getFirstErrors();                    throw new Exception(reset($error));//抛出异常                }                if(isset($post['sku_price'])){                    foreach ($post['sku_price'] as $k=>$v){                        $sku=Sku::findOne($k);                        if($sku){                            $detail=new OrderDetail();                            $detail->order_id=$model->id;                            $detail->sku_id=$sku->id;                            if(isset($sku->goods)){                                $detail->goods_id=$sku->goods->id;                            }                            $detail->number=$post['sku_number'][$k];                            $detail->price=$v;                            $detail->original_price=$post['sku_original_price'][$k];                            $detail->factory_price=$sku->factory_price;                            $detail->period=$post['sku_period'][$k];                            if(!$detail->save()){                                $error=$detail->getFirstErrors();                                throw new Exception(reset($error));//抛出异常                            }                        }else{                            throw new Exception('sku不存在');//抛出异常                        }                    }                }                $tr->commit();                return $this->render('/layer/close');            } catch (yii\db\Exception $e) {                //回滚                $tr->rollBack();                return $this->message($e->getMessage(),$this->redirect(Yii::$app->request->referrer),'error');            }        }        return $this->render('create',['model'=>$model]);    }    public function actionUpdate(){        $model=Order::findOne(Yii::$app->request->get('id'));        if(Yii::$app->request->post()){            $post=Yii::$app->request->post();            $tr = Yii::$app->db->beginTransaction();            try {                $model->load($post);                if(!$model->save()){                    $error=$model->getFirstErrors();                    throw new Exception(reset($error));//抛出异常                }                if(isset($post['sku_price'])){                    if(!OrderDetail::deleteAll(['order_id'=>$model->id])){                        throw new Exception('原数据无法删除');//抛出异常                    }                    foreach ($post['sku_price'] as $k=>$v){                        $sku=Sku::findOne($k);                        if($sku){                            $detail=new OrderDetail();                            $detail->order_id=$model->id;                            $detail->sku_id=$sku->id;                            if(isset($sku->goods)){                                $detail->goods_id=$sku->goods->id;                            }                            $detail->number=$post['sku_number'][$k];                            $detail->price=$v;                            if(!$detail->save()){                                $error=$detail->getFirstErrors();                                throw new Exception(reset($error));//抛出异常                            }                        }else{                            throw new Exception('sku不存在');//抛出异常                        }                    }                }                $tr->commit();                return $this->render('/layer/close');            } catch (yii\db\Exception $e) {                //回滚                $tr->rollBack();                return $this->message($e->getMessage(),$this->redirect(Yii::$app->request->referrer),'error');            }        }        return $this->render('update',['model'=>$model]);    }    public function actionDelete(){        if (yii::$app->getRequest()->getIsPost()) {//只允许post删除            $id = Yii::$app->request->get('id', null);            $param = yii::$app->getRequest()->post('id', null);            if($param !== null){                $id = $param;            }            if(!$id){                return false;            }            $arr=explode(',',$id);            Order::updateAll(['status'=>5],['in','id',$arr]);            return $this->redirect(Yii::$app->request->referrer);        }    }    //获取产品    public function actionGetGoods($id)    {        $result = array();        $result['error'] = 1;        $result['msg'] = "获取失败";        $list = Goods::find()            ->where(['id'=>$id])            ->one();        if ($list) {            $result['error'] = 0;            $result['msg'] = "获取成功";            $result['model'] = $list;        }        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;        return ['result'=>$result];    }    /**     * 确认付款     */    public function actionPaid($id){        $order=Order::findOne($id);        //更新订单状态        if($order->status==1){                $order->status=2;                $order->pay_status=1;                $order->paid_time=time();                $order->save();            return $this->message('成功', $this->redirect(Yii::$app->request->referrer), 'success');        }        else{            return $this->message('发生错误', $this->redirect(Yii::$app->request->referrer), 'error');        }    }    /**     * 确认发货     */    public function actionShipping(){        $id=Yii::$app->request->get('id');        $order=Order::findOne($id);        //更新订单状态        if($order->status==2){            if(StockRecord::is_paid($id)) {                $order->status = 3;                $order->delivery_time = time();                $order->is_delivery = 1;                $order->express_number=Yii::$app->request->get('express_number');                $order->express_name=Yii::$app->request->get('express_name');                $order->save();                return $this->message('成功', $this->redirect(Yii::$app->request->referrer), 'success');            }else{                return $this->message('库存不足', $this->redirect(Yii::$app->request->referrer), 'error');            }        }        else{            return $this->message('发生错误', $this->redirect(Yii::$app->request->referrer), 'error');        }    }    public function actionFinish($id){        $order=Order::findOne($id);        if($order->status==3){            if(Order::finishOrder($order->id)){                return $this->message('成功', $this->redirect(Yii::$app->request->referrer), 'success');            }else{                return $this->message('发生错误', $this->redirect(Yii::$app->request->referrer), 'error');            }        }    }    /**     * 统计     */    public function actionStatistics(){        $request=Yii::$app->request;        $message['time1']       = strtotime($request->get('time1'));        $message['time2']       = strtotime($request->get('time2'));        $data=Order::find();        if($message['time1'] >0 and  $message['time2'] >0){            $data->andWhere(['between','append',$message['time1'], $message['time2'] ]);        }        else{            $before=strtotime(date('Y-m-d 00:00:00',time()));            $data->andWhere(['between','append',$before,time()]);        }        //统计数据        $model['order_number']=$data->count();//订单数量        $model['order_paid_number']=$data->andWhere(['in','status',[1,2]])->count();//已付款订单        $pay_method=PayMethod::find()->select(['id','title'])->all();        foreach ($pay_method as $k=>$v){            $pay[$v->id]['paid_money']=0;            $pay[$v->id]['title']=$v->title;        }        $paid=$data->andWhere(['in','status',[1,2]])->all();        foreach ($paid as $k=>$v){            $pay[$v->pay_method]['paid_money']+=$v->pay_price;        }        return $this->render('statistics',[            'model'=>$model,            'pay'=>$pay        ]);    }    /**     * 快捷订购搜索sku     */    public function actionQuickSearch(){        $val=Yii::$app->request->get('val');        $arr=explode(' ',$val);        $page=Yii::$app->request->get('page');        $user_id=Yii::$app->request->get('user_id');        $begin=($page-1)*50-1;        $error=0;        if(!$val){            $error=1;        }        $search=Sku::find()->where(['status'=>'核准']);        foreach ($arr as $k=>$v){            $search->andFilterWhere(['like','sku_keywords',$v]);        }        $count=$search->count();        $data=[];        if($begin>$count){            $error=1;        }        else{            $sku=$search->offset($begin)->limit(50)->all();            foreach ($sku as $k=>$v){                $data[$k]['id']=$v->id;                if(isset($v->goods)){                    $data[$k]['title']=$v->goods->title;                    $data[$k]['brand']=$v->goods->brand->title;                }                else{                    $data[$k]['title']='';                    $data[$k]['brand']='';                }                $data[$k]['number']=$v->sku_id;                $data[$k]['specifications']=$v->specifications;                $data[$k]['price']=Sku::countPrice($user_id,$v->id)[2];                $data[$k]['min_number']=$v->min_number.$v->unit;                $data[$k]['period']=$v->period;            }        }        $model['data']=$data;        $model['error']=$error;        $model['count']=$count-$page*50;        echo json_encode($model);    }    /**     * 获取sku信息     */    public function actionSku()    {        $id=Yii::$app->request->get('id');        $sku=Sku::find()->where(['in','id',$id])->all();        $user_id=Yii::$app->request->get('user_id');        $error=0;        $model=[];        if($sku){            foreach ($sku as $k=>$v){                $model[$k]['id']=$v->id;                $model[$k]['title']=$v->sku_title;                if(isset($v->goods)){                    $model[$k]['href']=Url::to(['goods/detail','id'=>$v->goods->id]);                }                else{                    $model[$k]['href']='';                }                $model[$k]['number']=$v->sku_id;                $model[$k]['brand']=$v->brand_code;                $model[$k]['price1']=Sku::countPrice($user_id,$v->id)[1];                $model[$k]['price2']=Sku::countPrice($user_id,$v->id)[2];                $model[$k]['specifications']=$v->specifications;                $model[$k]['period']=$v->period;                $model[$k]['weight']=$v->gross_weight;                $model[$k]['min_number']=$v->min_number;            }        }        else{            $error=1;        }        $data['data']=$model;        $data['error']=$error;        echo json_encode($data);    }    /**     * 导出订单pdf     */    public function actionPdf(){        $this->layout=false;        $id=Yii::$app->request->get('id');        $order=Order::findOne($id);        return $this->render('pdf',[            'order'=>$order        ]);    }    public function actionOrderOut(){        $get=Yii::$app->request->get();        $search=new OrderSearch();        $url=Yii::$app->request->referrer;        $data=$search->search($get['message']);        $model= $data->query->orderBy('append desc')->all();        if(count($model)==0){            return $this->redirect(Yii::$app->request->referrer);        }        Excel::export([            'models' =>$model,            'fileName' => '订单'.date('Y-m-d'),            'columns' => [                'id',                [                    'attribute' => 'service_id',                    'value' => function ($data) {                        if (isset($data->service)) {                            return $data->service->title;                        }                    }                ],                'order_number',                [                    'attribute' => 'append',                    'value' => function ($data) {                        return date('Y-m-d H:i:s', $data->append);                    }                ],                'pay_price',                [                    'attribute' => 'user_id',                    'value' => function ($data) {                        if (isset($data->user)) {                            return $data->user->name;                        }                    }                ],                [                    'label' => '公司名称',                    'value' => function ($data) {                        if (isset($data->user)) {                            return $data->user->company;                        }                    }                ],                [                    'attribute' => 'pay_status',                    'value' => function ($data) {                        if ($data->pay_status == 1) {                            return '已支付';                        } else {                            return '未支付';                        }                    }                ],                [                    'attribute' => 'is_delivery',                    'value' => function ($data) {                        if ($data->is_delivery == 1) {                            return '已发货';                        } else {                            return '未发货';                        }                    }                ],                [                    'attribute' => 'express',                    'value' => function ($data) {                        if ($data->freightMessage) {                            return $data->freightMessage->title;                        }                    }                ],                [                    'attribute' => 'pay_method',                    'value' => function ($data) {                        if ($data->payType) {                            return $data->payType->title;                        }                    }                ],                [                    'attribute' => 'type',                    'value' => function ($data) {                        return \backend\models\Order::$type[$data->type];                    }                ],                'consignee',                'phone',                'freight',                'content',                [                    'attribute' => 'status',                    'value' => function ($data) {                        return \backend\models\Order::$status[$data->status];                    }                ],            ]        ]);        return yii::$app->util->alert('导出成功',$url);    }}

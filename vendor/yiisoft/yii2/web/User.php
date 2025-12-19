@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\web;
@@ -11,6 +11,7 @@ use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidValueException;
+use yii\di\Instance;
 use yii\rbac\CheckAccessInterface;
 
 /**
@@ -46,16 +47,20 @@ use yii\rbac\CheckAccessInterface;
  * ]
  * ```
  *
- * @property string|int $id The unique identifier for the user. If `null`, it means the user is a guest. This
- * property is read-only.
+ * @property-read string|int|null $id The unique identifier for the user. If `null`, it means the user is a
+ * guest.
  * @property IdentityInterface|null $identity The identity object associated with the currently logged-in
  * user. `null` is returned if the user is not logged in (not authenticated).
- * @property bool $isGuest Whether the current user is a guest. This property is read-only.
+ * @property-read bool $isGuest Whether the current user is a guest.
  * @property string $returnUrl The URL that the user should be redirected to after login. Note that the type
  * of this property differs in getter and setter. See [[getReturnUrl()]] and [[setReturnUrl()]] for details.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ * @phpstan-template T of IdentityInterface
+ * @psalm-template T of IdentityInterface
+ * @phpstan-property T|null $identity
+ * @psalm-property T|null $identity
  */
 class User extends Component
 {
@@ -66,6 +71,8 @@ class User extends Component
 
     /**
      * @var string the class name of the [[identity]] object.
+     * @phpstan-var class-string<T>
+     * @psalm-var class-string<T>
      */
     public $identityClass;
     /**
@@ -80,7 +87,7 @@ class User extends Component
      */
     public $enableSession = true;
     /**
-     * @var string|array the URL for login when [[loginRequired()]] is called.
+     * @var string|array|null the URL for login when [[loginRequired()]] is called.
      * If an array is given, [[UrlManager::createUrl()]] will be called to create the corresponding URL.
      * The first element of the array should be the route to the login action, and the rest of
      * the name-value pairs are GET parameters used to construct the login URL. For example,
@@ -98,20 +105,21 @@ class User extends Component
      */
     public $identityCookie = ['name' => '_identity', 'httpOnly' => true];
     /**
-     * @var int the number of seconds in which the user will be logged out automatically if he
+     * @var int|null the number of seconds in which the user will be logged out automatically if the user
      * remains inactive. If this property is not set, the user will be logged out after
      * the current session expires (c.f. [[Session::timeout]]).
      * Note that this will not work if [[enableAutoLogin]] is `true`.
      */
     public $authTimeout;
     /**
-     * @var CheckAccessInterface The access checker to use for checking access.
+     * @var CheckAccessInterface|string|array|null The access checker object to use for checking access or the application
+     * component ID of the access checker.
      * If not set the application auth manager will be used.
      * @since 2.0.9
      */
     public $accessChecker;
     /**
-     * @var int the number of seconds in which the user will be logged out automatically
+     * @var int|null the number of seconds in which the user will be logged out automatically
      * regardless of activity.
      * Note that this will not work if [[enableAutoLogin]] is `true`.
      */
@@ -129,6 +137,11 @@ class User extends Component
      * @var string the session variable name used to store the value of [[id]].
      */
     public $idParam = '__id';
+    /**
+     * @var string the session variable name used to store authentication key.
+     * @since 2.0.41
+     */
+    public $authKeyParam = '__authKey';
     /**
      * @var string the session variable name used to store the value of expiration timestamp of the authenticated state.
      * This is used when [[authTimeout]] is set.
@@ -165,8 +178,8 @@ class User extends Component
         if ($this->enableAutoLogin && !isset($this->identityCookie['name'])) {
             throw new InvalidConfigException('User::identityCookie must contain the "name" element.');
         }
-        if (!empty($this->accessChecker) && is_string($this->accessChecker)) {
-            $this->accessChecker = Yii::createObject($this->accessChecker);
+        if ($this->accessChecker !== null) {
+            $this->accessChecker = Instance::ensure($this->accessChecker, '\yii\rbac\CheckAccessInterface');
         }
     }
 
@@ -182,6 +195,8 @@ class User extends Component
      * `null` is returned if the user is not logged in (not authenticated).
      * @see login()
      * @see logout()
+     * @phpstan-return T|null
+     * @psalm-return T|null
      */
     public function getIdentity($autoRenew = true)
     {
@@ -214,6 +229,8 @@ class User extends Component
      * @param IdentityInterface|null $identity the identity object associated with the currently logged user.
      * If null, it means the current user will be a guest without any associated identity.
      * @throws InvalidValueException if `$identity` object does not implement [[IdentityInterface]].
+     * @phpstan-param T|null $identity
+     * @psalm-param T|null $identity
      */
     public function setIdentity($identity)
     {
@@ -245,6 +262,8 @@ class User extends Component
      * @param IdentityInterface $identity the user identity (which should already be authenticated)
      * @param int $duration number of seconds that the user can remain in logged-in status, defaults to `0`
      * @return bool whether the user is logged in
+     * @phpstan-param T $identity
+     * @psalm-param T $identity
      */
     public function login(IdentityInterface $identity, $duration = 0)
     {
@@ -290,10 +309,16 @@ class User extends Component
      * For example, [[\yii\filters\auth\HttpBearerAuth]] will set this parameter to be `yii\filters\auth\HttpBearerAuth`.
      * @return IdentityInterface|null the identity associated with the given access token. Null is returned if
      * the access token is invalid or [[login()]] is unsuccessful.
+     * @phpstan-return T|null
+     * @psalm-return T|null
      */
     public function loginByAccessToken($token, $type = null)
     {
-        /* @var $class IdentityInterface */
+        /**
+         * @var IdentityInterface $class
+         * @phpstan-var class-string<T> $class
+         * @psalm-var class-string<T> $class
+         */
         $class = $this->identityClass;
         $identity = $class::findIdentityByAccessToken($token, $type);
         if ($identity && $this->login($identity)) {
@@ -362,7 +387,7 @@ class User extends Component
 
     /**
      * Returns a value that uniquely represents the user.
-     * @return string|int the unique identifier for the user. If `null`, it means the user is a guest.
+     * @return string|int|null the unique identifier for the user. If `null`, it means the user is a guest.
      * @see getIdentity()
      */
     public function getId()
@@ -378,7 +403,7 @@ class User extends Component
      * This method reads the return URL from the session. It is usually used by the login action which
      * may call this method to redirect the browser to where it goes after successful authentication.
      *
-     * @param string|array $defaultUrl the default return URL in case it was not set previously.
+     * @param string|array|null $defaultUrl the default return URL in case it was not set previously.
      * If this is null and the return URL was not set previously, [[Application::homeUrl]] will be redirected to.
      * Please refer to [[setReturnUrl()]] on accepted format of the URL.
      * @return string the URL that the user should be redirected to after login.
@@ -438,7 +463,8 @@ class User extends Component
     {
         $request = Yii::$app->getRequest();
         $canRedirect = !$checkAcceptHeader || $this->checkRedirectAcceptable();
-        if ($this->enableSession
+        if (
+            $this->enableSession
             && $request->getIsGet()
             && (!$checkAjax || !$request->getIsAjax())
             && $canRedirect
@@ -464,6 +490,8 @@ class User extends Component
      * @param int $duration number of seconds that the user can remain in logged-in status.
      * If 0, it means login till the user closes the browser or the session is manually destroyed.
      * @return bool whether the user should continue to be logged in
+     * @phpstan-param T $identity
+     * @psalm-param T $identity
      */
     protected function beforeLogin($identity, $cookieBased, $duration)
     {
@@ -486,6 +514,8 @@ class User extends Component
      * @param bool $cookieBased whether the login is cookie-based
      * @param int $duration number of seconds that the user can remain in logged-in status.
      * If 0, it means login till the user closes the browser or the session is manually destroyed.
+     * @phpstan-param T $identity
+     * @psalm-param T $identity
      */
     protected function afterLogin($identity, $cookieBased, $duration)
     {
@@ -503,6 +533,8 @@ class User extends Component
      * so that the event is triggered.
      * @param IdentityInterface $identity the user identity information
      * @return bool whether the user should continue to be logged out
+     * @phpstan-param T $identity
+     * @psalm-param T $identity
      */
     protected function beforeLogout($identity)
     {
@@ -520,6 +552,8 @@ class User extends Component
      * If you override this method, make sure you call the parent implementation
      * so that the event is triggered.
      * @param IdentityInterface $identity the user identity information
+     * @phpstan-param T $identity
+     * @psalm-param T $identity
      */
     protected function afterLogout($identity)
     {
@@ -558,6 +592,8 @@ class User extends Component
      * @param IdentityInterface $identity
      * @param int $duration number of seconds that the user can remain in logged-in status.
      * @see loginByCookie()
+     * @phpstan-param T $identity
+     * @psalm-param T $identity
      */
     protected function sendIdentityCookie($identity, $duration)
     {
@@ -590,14 +626,15 @@ class User extends Component
         $data = json_decode($value, true);
         if (is_array($data) && count($data) == 3) {
             list($id, $authKey, $duration) = $data;
-            /* @var $class IdentityInterface */
+            /** @var IdentityInterface $class */
             $class = $this->identityClass;
             $identity = $class::findIdentity($id);
             if ($identity !== null) {
                 if (!$identity instanceof IdentityInterface) {
                     throw new InvalidValueException("$class::findIdentity() must return an object implementing IdentityInterface.");
                 } elseif (!$identity->validateAuthKey($authKey)) {
-                    Yii::warning("Invalid auth key attempted for user '$id': $authKey", __METHOD__);
+                    $ip = Yii::$app->getRequest()->getUserIP();
+                    Yii::warning("Invalid cookie auth key attempted for user '$id' from $ip: $authKey", __METHOD__);
                 } else {
                     return ['identity' => $identity, 'duration' => $duration];
                 }
@@ -632,6 +669,8 @@ class User extends Component
      * If null, it means switching the current user to be a guest.
      * @param int $duration number of seconds that the user can remain in logged-in status.
      * This parameter is used only when `$identity` is not null.
+     * @phpstan-param T|null $identity
+     * @psalm-param T|null $identity
      */
     public function switchIdentity($identity, $duration = 0)
     {
@@ -647,14 +686,14 @@ class User extends Component
         }
 
         $session = Yii::$app->getSession();
-        if (!YII_ENV_TEST) {
-            $session->regenerateID(true);
-        }
+        $session->regenerateID(true);
         $session->remove($this->idParam);
         $session->remove($this->authTimeoutParam);
+        $session->remove($this->authKeyParam);
 
         if ($identity) {
             $session->set($this->idParam, $identity->getId());
+            $session->set($this->authKeyParam, $identity->getAuthKey());
             if ($this->authTimeout !== null) {
                 $session->set($this->authTimeoutParam, time() + $this->authTimeout);
             }
@@ -685,9 +724,21 @@ class User extends Component
         if ($id === null) {
             $identity = null;
         } else {
-            /* @var $class IdentityInterface */
+            /** @var IdentityInterface $class */
             $class = $this->identityClass;
             $identity = $class::findIdentity($id);
+            if ($identity === null) {
+                $this->switchIdentity(null);
+            }
+        }
+
+        if ($identity !== null) {
+            $authKey = $session->get($this->authKeyParam);
+            if ($authKey !== null && !$identity->validateAuthKey($authKey)) {
+                $identity = null;
+                $ip = Yii::$app->getRequest()->getUserIP();
+                Yii::warning("Invalid session auth key attempted for user '$id' from $ip: $authKey", __METHOD__);
+            }
         }
 
         $this->setIdentity($identity);
@@ -752,10 +803,10 @@ class User extends Component
      * @see acceptableRedirectTypes
      * @since 2.0.8
      */
-    protected function checkRedirectAcceptable()
+    public function checkRedirectAcceptable()
     {
         $acceptableTypes = Yii::$app->getRequest()->getAcceptableContentTypes();
-        if (empty($acceptableTypes) || count($acceptableTypes) === 1 && array_keys($acceptableTypes)[0] === '*/*') {
+        if (empty($acceptableTypes) || (count($acceptableTypes) === 1 && array_keys($acceptableTypes)[0] === '*/*')) {
             return true;
         }
 

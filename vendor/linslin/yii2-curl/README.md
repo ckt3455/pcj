@@ -1,6 +1,12 @@
 yii2-curl extension
 ===================
-Cool working curl extension for Yii2, including RESTful support:
+[![Latest Stable Version](https://poser.pugx.org/linslin/yii2-curl/v/stable)](https://packagist.org/packages/linslin/yii2-curl)
+[![Latest Master Build](https://api.travis-ci.org/linslin/Yii2-Curl.svg?branch=master)](https://travis-ci.org/linslin/Yii2-Curl/builds)
+[![Test Coverage](https://codeclimate.com/github/linslin/Yii2-Curl/badges/coverage.svg)](https://codeclimate.com/github/linslin/Yii2-Curl/coverage)
+[![Total Downloads](https://poser.pugx.org/linslin/yii2-curl/downloads)](https://packagist.org/packages/linslin/yii2-curl)
+[![License](https://poser.pugx.org/linslin/yii2-curl/license)](https://packagist.org/packages/linslin/yii2-curl)
+                   
+Easy working cURL extension for Yii2, including RESTful support:
 
  - POST
  - GET
@@ -8,12 +14,13 @@ Cool working curl extension for Yii2, including RESTful support:
  - PUT
  - PATCH
  - DELETE
+ - OPTIONS
 
 Requirements
 ------------
 - Yii2
-- PHP 5.4+
-- Curl and php-curl installed
+- PHP >=7.2.0 || 8.0.1
+- ext-curl, ext-json, and php-curl installed
 
 
 Installation
@@ -22,7 +29,7 @@ Installation
 The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
 
 ```bash
-php composer.phar require --prefer-dist linslin/yii2-curl "*"
+composer require --prefer-dist linslin/yii2-curl "*"
 ```
 
 
@@ -32,187 +39,218 @@ Usage
 Once the extension is installed, simply use it in your code. The following example shows you how to handling a simple GET Request. 
 
 ```php
-<?php
-/**
- * Yii2 test controller
- *
- * @category  Web-yii2-example
- * @package   yii2-curl-example
- * @author    Nils Gajsek <info@linslin.org>
- * @copyright 2013-2015 Nils Gajsek<info@linslin.org>
- * @license   http://opensource.org/licenses/MIT MIT Public
- * @version   1.0.10
- * @link      http://www.linslin.org
- *
- */
-
-namespace app\controllers;
-
-use yii\web\Controller;
 use linslin\yii2\curl;
+$curl = new curl\Curl();
 
-class TestController extends Controller
-{
+//get http://example.com/
+$response = $curl->get('http://example.com/');
 
-    /**
-     * Yii action controller
-     */
-    public function actions()
-    {
-        return [
-            'error' => [
-                'class' => 'yii\web\ErrorAction',
-            ],
-        ];
-    }
-
-
-    /**
-     * cURL GET example
-     */
-    public function actionGetExample()
-    {
-        //Init curl
-        $curl = new curl\Curl();
-
-        //get http://example.com/
-        $response = $curl->get('http://example.com/');
-    }
-
-
-    /**
-     * cURL POST example with post body params.
-     */
-    public function actionPostExample()
-    {
-        //Init curl
-        $curl = new curl\Curl();
-
-        //post http://example.com/
-        $response = $curl->setOption(
-                CURLOPT_POSTFIELDS, 
-                http_build_query(array(
-                    'myPostField' => 'value'
-                )
-            ))
-            ->post('http://example.com/');
-    }
-
-
-    /**
-     * cURL multiple POST example one after one
-     */
-    public function actionMultipleRequest()
-    {
-        //Init curl
-        $curl = new curl\Curl();
-
-
-        //post http://example.com/
-        $response = $curl->setOption(
-            CURLOPT_POSTFIELDS, 
-            http_build_query(array(
-                'myPostField' => 'value'
-                )
-            ))
-            ->post('http://example.com/');
-
-
-        //post http://example.com/, reset request before
-        $response = $curl->reset()
-            ->setOption(
-                CURLOPT_POSTFIELDS, 
-                http_build_query(array(
-                    'myPostField' => 'value'
-                )
-            ))
-            ->post('http://example.com/');
-    }
-
-
-    /**
-     * cURL advanced GET example with HTTP status codes
-     */
-    public function actionGetAdvancedExample()
-    {
-        //Init curl
-        $curl = new curl\Curl();
-
-        //get http://example.com/
-        $response = $curl->post('http://example.com/');
-
-        // List of status codes here http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-        switch ($curl->responseCode) {
-
-            case 'timeout':
-                //timeout error logic here
-                break;
-                
-            case 200:
-                //success logic here
-                break;
-
-            case 404:
-                //404 Error logic here
-                break;
-        }
-    }
+if ($curl->errorCode === null) {
+   echo $response;
+} else {
+     // List of curl error codes here https://curl.haxx.se/libcurl/c/libcurl-errors.html
+    switch ($curl->errorCode) {
     
-    
-    /**
-     * cURL timeout chaining/handling
-     */
-    public function actionHandleTimeoutExample()
-    {
-        //Init curl
-        $curl = new curl\Curl();
-
-        //get http://www.google.com:81/ -> timeout
-        $response = $curl->post('http://www.google.com:81/');
-
-        // List of status codes here http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-        switch ($curl->responseCode) {
-
-            case 'timeout':
-                //timeout error logic here
-                break;
-                
-            case 200:
-                //success logic here
-                break;
-
-            case 404:
-                //404 Error logic here
-                break;
-        }
+        case 6:
+            //host unknown example
+            break;
     }
-    
-    
-    /**
-     * cURL error handling
-     */
-    public function actionHandleHostUknownExample()
-    {
-        //Init curl
-        $curl = new curl\Curl();
-
-        //get http://www.google.com:81/ -> timeout
-        $response = $curl->post('http://www.xyz-no-one-set.nope');
-
-        // List of curl error codes here https://curl.haxx.se/libcurl/c/libcurl-errors.html
-        switch ($curl->errorCode) {
-
-            case 6:
-                //host unkown example
-                break;
-        }
-    }
-}
+} 
 ```
+
+```php
+// GET request with GET params
+// http://example.com/?key=value&scondKey=secondValue
+$curl = new curl\Curl();
+$response = $curl->setGetParams([
+        'key' => 'value',
+        'secondKey' => 'secondValue'
+     ])
+     ->get('http://example.com/');
+```
+
+
+```php
+// POST URL form-urlencoded 
+$curl = new curl\Curl();
+$response = $curl->setPostParams([
+        'key' => 'value',
+        'secondKey' => 'secondValue'
+     ])
+     ->post('http://example.com/');
+```
+
+```php
+// POST RAW JSON
+$curl = new curl\Curl();
+$response = $curl->setRawPostData(
+     json_encode[
+        'key' => 'value',
+        'secondKey' => 'secondValue'
+     ])
+     ->post('http://example.com/');
+```
+
+```php
+// POST RAW JSON and auto decode JSON respawn by setting raw = true. 
+// This is usefull if you expect an JSON response and want to autoparse it. 
+$curl = new curl\Curl();
+$response = $curl->setRawPostData(
+     json_encode[
+        'key' => 'value',
+        'secondKey' => 'secondValue'
+     ])
+     ->post('http://example.com/', true);
+     
+// JSON decoded response by parsing raw = true in to ->post().
+var_dump($response);
+```
+
+```php
+// POST RAW XML
+$curl = new curl\Curl();
+$response = $curl->setRawPostData('<?xml version="1.0" encoding="UTF-8"?><someNode>Test</someNode>')
+     ->post('http://example.com/');
+```
+
+
+```php
+// POST with special headers
+$curl = new curl\Curl();
+$response = $curl->setPostParams([
+        'key' => 'value',
+        'secondKey' => 'secondValue'
+     ])
+     ->setHeaders([
+        'Custom-Header' => 'user-b'
+     ])
+     ->post('http://example.com/');
+```
+
+
+```php
+// POST JSON with body string & special headers
+$curl = new curl\Curl();
+
+$params = [
+    'key' => 'value',
+    'secondKey' => 'secondValue'
+];
+
+$response = $curl->setRequestBody(json_encode($params))
+     ->setHeaders([
+        'Content-Type' => 'application/json',
+        'Content-Length' => strlen(json_encode($params))
+     ])
+     ->post('http://example.com/');
+```
+
+```php
+// Avanced POST request with curl options & error handling
+$curl = new curl\Curl();
+
+$params = [
+    'key' => 'value',
+    'secondKey' => 'secondValue'
+];
+
+$response = $curl->setRequestBody(json_encode($params))
+     ->setOption(CURLOPT_ENCODING, 'gzip')
+     ->post('http://example.com/');
+     
+// List of status codes here http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+switch ($curl->responseCode) {
+
+    case 'timeout':
+        //timeout error logic here
+        break;
+        
+    case 200:
+        //success logic here
+        break;
+
+    case 404:
+        //404 Error logic here
+        break;
+}
+
+//list response headers
+var_dump($curl->responseHeaders);
+```
+
+Testing
+------------
+
+- Run codeception tests with `vendor/bin/codecept run` in repository root dir. 
+  Run codeception with clover report `XDEBUG_MODE=coverage vendor/bin/codecept run --coverage-xml ./../../build/logs/clover.xml`. 
+  On windows run `vendor\bin\codecept.bat run`. 
+  On windows with clover report run `vendor\bin\codecept.bat run --coverage-xml ./../../build/logs/clover.xml`. 
 
  
 Changelog
 ------------
+------------
+##### Release 1.5.0 - Changelog
+- Added PHP 8 support.
+- Updated phiremock to v2.
+- Removed not needed dependencies from the composer package file (https://github.com/linslin/Yii2-Curl/issues/88).
+- Fixed CURLFile object serialization for profiling (https://github.com/linslin/Yii2-Curl/issues/87).
+
+
+##### Release 1.4.0 - Changelog
+- Added support for HTTP-Method OPTIONS.
+- Removed deprecated PHP Version support. Minimum PHP Version is now 7.2.0. 
+Please use version "linslin/yii2-curl 1.3.0" - https://github.com/linslin/Yii2-Curl/releases/tag/1.3.0 if you need PHP 7.1.0+ support. 
+
+
+##### Release 1.3.0 - Changelog
+- Fixed HTTP-Method parsing on PATCH request.
+- Updated DocBlocks + code refactoring.  
+- Removed deprecated PHP Version support. Minimum PHP Version is now 7.1.3. 
+Please use version "linslin/yii2-curl 1.2.1" - https://github.com/linslin/Yii2-Curl/releases/tag/1.2.1 if you need PHP 5.4+ support. 
+
+##### Release 1.2.2 - Changelog
+- Added some new cURL examples into readme.md.
+
+##### Release 1.2.1 - Changelog
+- Added `setRawPostData([mixed]) [this]` which allows you to post any data format. 
+
+##### Release 1.2.0 - Changelog
+- Added `unsetHeader([string header]) [this]` helper which allows you to unset one specific header.
+- Added `setHeader([string header, string value]) [this]` helper which allows you to set one specific header.
+- Added `getRequestHeaders() [array]` helper which returns all request headers as an array.
+- Added `getRequestHeader([string headerKey]) [string|null]`  helper which returns a specific request header as an string.
+- Added new test cases for `getRequestHeaders()` and `getRequestHeader()`.
+- Readme adjustments. 
+
+##### Release 1.1.3 - Changelog
+- Fixed issue with patch request.
+- Fully added functionalTests for 100% coverage. 
+
+##### Release 1.1.2 - Changelog
+- Fixed https://github.com/linslin/Yii2-Curl/issues/59
+- Fixed https://github.com/linslin/Yii2-Curl/issues/57
+
+##### Release 1.1.1 - Changelog
+- Fixed wrong parameter parsing into `_httpRequest()` (thanks to yemexx1)
+- Added JSON decode functions tests (thanks to yemexx1)
+
+##### Release 1.1.0 - Changelog
+- Added `setHeaders() [array]` helper.
+- Added `setPostParams() [array]` helper.
+- Added `setGetParams() [array]` helper.
+- Added `setRequestBody() [string]` helper.
+- Added `getUrl()` helper.
+- Added API attribute `errorText [string|null]` - holds a string describing the given error code - https://github.com/linslin/Yii2-Curl/issues/49.
+- Added functionTests to ensure stability.
+- Allow PHP class goodness - https://github.com/linslin/Yii2-Curl/issues/52.
+- Fixed header explode - https://github.com/linslin/Yii2-Curl/pull/51.
+
+##### Release 1.0.11 - Changelog
+- Added API attribute `responseHeaders [array|null]` which returns an array of all response headers. 
+- Changed `_defaultOptions[CURLOPT_HEADER]` to `true`.
+- Profile debugging is only active if constant `YII_DEBUG` is `true`.
+
 ##### Release 1.0.10 - Changelog
 - Fixed PHP notice https://github.com/linslin/Yii2-Curl/issues/39.
 
@@ -262,3 +300,10 @@ Changelog
 ##### Release 1.0 - Changelog
 - Official stable release
 
+
+Thanks to
+------------
+------------
+Mariano Custiel ([@mcustiel](https://github.com/mcustiel))
+
+... and all other contributors. 

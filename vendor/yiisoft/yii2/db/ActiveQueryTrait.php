@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\db;
@@ -115,7 +115,7 @@ trait ActiveQueryTrait
             return $rows;
         } else {
             $models = [];
-            /* @var $class ActiveRecord */
+            /** @var ActiveRecord $class */
             $class = $this->modelClass;
             foreach ($rows as $row) {
                 $model = $class::instantiate($row);
@@ -135,14 +135,18 @@ trait ActiveQueryTrait
      */
     public function findWith($with, &$models)
     {
+        if (empty($models)) {
+            return;
+        }
+
         $primaryModel = reset($models);
         if (!$primaryModel instanceof ActiveRecordInterface) {
-            /* @var $modelClass ActiveRecordInterface */
+            /** @var ActiveRecordInterface $modelClass */
             $modelClass = $this->modelClass;
             $primaryModel = $modelClass::instance();
         }
         $relations = $this->normalizeRelations($primaryModel, $with);
-        /* @var $relation ActiveQuery */
+        /** @var ActiveQuery $relation */
         foreach ($relations as $name => $relation) {
             if ($relation->asArray === null) {
                 // inherit asArray from primary query

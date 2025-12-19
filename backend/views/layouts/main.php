@@ -61,7 +61,7 @@ AppAsset::register($this);
         }
     </script>
 </div>
-<div class="wrapper wrapper-content animated fadeInRight">
+<div class="wrapper wrapper-content animated">
 
 <?= $content ?>
 

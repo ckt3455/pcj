@@ -39,17 +39,11 @@ class ActiveFormJsTree extends InputWidget
         JsTreeAsset::register($this->view);
         $inputId = $this->inputOptions['id'] = isset($this->inputOptions['id'])?$this->inputOptions['id']:'js-tree-selected';
         $initial_js = '
-        var tree = $("#'.$this->containerId.'").jstree('.json_encode($this->options).');
+        var tree = $("#'.$this->containerId.'").jstree('.Json::encode($this->options).');
         var core = tree.data("jstree")
         core.element.on("select_node.jstree", function (e, data) {
-            var input = $("#'.$inputId.'").val(data.node.id);           
-        }).on("loaded.jstree", function () {  
-            $("#'.$this->containerId.'").jstree(\'select_node\',$("#'.$inputId.'").val(), true);
-        });
-        
-        '
-
-        ;
+            var input = $("#'.$inputId.'").val(data.node.data);
+        });';
         $this->view->registerJs($initial_js . $this->js);
         $this->inputOptions['hidden'] = true;
         $input = Html::activeTextInput($this->model, $this->attribute, $this->inputOptions);

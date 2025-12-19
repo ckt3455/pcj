@@ -6,7 +6,6 @@ use api\extensions\ApiBaseController;
 use backend\models\Address;
 use backend\models\Icon;
 use backend\models\ServiceOrder;
-use backend\models\SetImage;
 use backend\models\User;
 use backend\models\UserMessage;
 use common\components\Helper;

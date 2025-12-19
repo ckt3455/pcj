@@ -1,13 +1,11 @@
 <?php
 
 namespace moonland\phpexcel;
+
 use yii\helpers\ArrayHelper;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
 use yii\i18n\Formatter;
-
-
-require dirname(dirname(__DIR__)).'/phpoffice/phpexcel/Classes/PHPExcel.php';
 
 /**
  * Excel Widget for generate Excel File or for load Excel File.

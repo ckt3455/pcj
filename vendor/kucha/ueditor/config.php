@@ -5,7 +5,7 @@ return [
     /* 执行上传图片的action名称 */
     "imageFieldName"          => "upfile",
     /* 提交的图片表单名称 */
-    "imageMaxSize"            => 1024*1024*50,
+    "imageMaxSize"            => 2048000,
     /* 上传大小限制，单位B */
     "imageAllowFiles"         => [
         ".png",
@@ -168,6 +168,7 @@ return [
         ".pdf",
         ".txt",
         ".md",
+        ".stp",
         ".xml"
     ],
     /* 上传文件格式显示 */

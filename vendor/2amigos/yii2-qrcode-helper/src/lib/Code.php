@@ -7,7 +7,7 @@
 namespace dosamigos\qrcode\lib;
 
 use yii\base\InvalidParamException;
-use yii\base\BaseObject;
+use yii\base\Object;
 
 /**
  * Class Code
@@ -20,7 +20,7 @@ use yii\base\BaseObject;
  * @link http://www.2amigos.us/
  * @package dosamigos\qrcode\lib
  */
-class Code extends BaseObject
+class Code extends Object
 {
     /**
      * @var int version

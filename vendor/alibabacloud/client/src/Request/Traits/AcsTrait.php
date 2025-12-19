@@ -2,19 +2,20 @@
 
 namespace AlibabaCloud\Client\Request\Traits;
 
-use AlibabaCloud\Client\SDK;
 use AlibabaCloud\Client\AlibabaCloud;
-use AlibabaCloud\Client\Request\Request;
-use AlibabaCloud\Client\Filter\ApiFilter;
-use AlibabaCloud\Client\Regions\LocationService;
 use AlibabaCloud\Client\Exception\ClientException;
 use AlibabaCloud\Client\Exception\ServerException;
+use AlibabaCloud\Client\Filter\ApiFilter;
+use AlibabaCloud\Client\Regions\LocationService;
+use AlibabaCloud\Client\Request\Request;
+use AlibabaCloud\Client\SDK;
+use GuzzleHttp\Psr7\Uri;
 
 /**
  * Trait AcsTrait
  *
  * @package   AlibabaCloud\Client\Request\Traits
- *
+ * @property Uri $uri
  * @mixin     Request
  */
 trait AcsTrait
@@ -45,6 +46,26 @@ trait AcsTrait
     public $endpointType = 'openAPI';
 
     /**
+     * @var string|null
+     */
+    public $network = 'public';
+
+    /**
+     * @var array|null
+     */
+    public $endpointMap;
+
+    /**
+     * @var string|null
+     */
+    public $endpointRegional;
+
+    /**
+     * @var string
+     */
+    public $endpointSuffix = '';
+
+    /**
      * @param string $action
      *
      * @return $this
@@ -52,9 +73,32 @@ trait AcsTrait
      */
     public function action($action)
     {
-        ApiFilter::action($action);
+        $this->action = ApiFilter::action($action);
 
-        $this->action = $action;
+        return $this;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     *
+     * @param string $endpointSuffix
+     *
+     * @return AcsTrait
+     * @throws ClientException
+     */
+    public function endpointSuffix($endpointSuffix)
+    {
+        $this->endpointSuffix = ApiFilter::endpointSuffix($endpointSuffix);
+
+        return $this;
+    }
+
+    /**
+     * @param string $network
+     */
+    public function network($network)
+    {
+        $this->network = ApiFilter::network($network);
 
         return $this;
     }
@@ -67,9 +111,7 @@ trait AcsTrait
      */
     public function version($version)
     {
-        ApiFilter::version($version);
-
-        $this->version = $version;
+        $this->version = ApiFilter::version($version);
 
         return $this;
     }
@@ -82,9 +124,7 @@ trait AcsTrait
      */
     public function product($product)
     {
-        ApiFilter::product($product);
-
-        $this->product = $product;
+        $this->product = ApiFilter::product($product);
 
         return $this;
     }
@@ -97,9 +137,7 @@ trait AcsTrait
      */
     public function endpointType($endpointType)
     {
-        ApiFilter::endpointType($endpointType);
-
-        $this->endpointType = $endpointType;
+        $this->endpointType = ApiFilter::endpointType($endpointType);
 
         return $this;
     }
@@ -112,9 +150,7 @@ trait AcsTrait
      */
     public function serviceCode($serviceCode)
     {
-        ApiFilter::serviceCode($serviceCode);
-
-        $this->serviceCode = $serviceCode;
+        $this->serviceCode = ApiFilter::serviceCode($serviceCode);
 
         return $this;
     }
@@ -127,29 +163,72 @@ trait AcsTrait
      */
     public function resolveHost()
     {
-        if ($this->uri->getHost() === 'localhost') {
-            $regionId = $this->realRegionId();
+        // Return if specified
+        if ($this->uri->getHost() !== 'localhost') {
+            return;
+        }
 
-            // 1. Find in the local array file
-            $host = AlibabaCloud::resolveHost(
-                $this->product,
-                $regionId
+        $region_id = $this->realRegionId();
+        $host      = '';
+
+        $this->resolveHostWays($host, $region_id);
+
+        if (!$host) {
+            throw new ClientException(
+                "No host found for {$this->product} in the {$region_id}, you can specify host by host() method. " .
+                'Like $request->host(\'xxx.xxx.aliyuncs.com\')',
+                SDK::HOST_NOT_FOUND
             );
+        }
 
-            // 2. Find in the Location service
-            if (!$host && $this->serviceCode) {
-                $host = LocationService::resolveHost($this);
-            }
+        $this->uri = $this->uri->withHost($host);
+    }
 
-            if (!$host) {
-                throw new ClientException(
-                    "No host found for {$this->product} in the {$regionId}, you can specify host by host() method. " .
-                    'Like $request->host(\'xxx.xxx.aliyuncs.com\')',
-                    SDK::HOST_NOT_FOUND
-                );
-            }
+    /**
+     * @param string $host
+     * @param string $region_id
+     *
+     * @throws ClientException
+     * @throws ServerException
+     */
+    private function resolveHostWays(&$host, $region_id)
+    {
+        $host = AlibabaCloud::resolveHostByStatic($this->product, $region_id);
 
-            $this->uri = $this->uri->withHost($host);
+        // 1. Find host by map.
+        if (!$host && $this->network === 'public' && isset($this->endpointMap[$region_id])) {
+            $host = $this->endpointMap[$region_id];
+        }
+
+        if (!$host) {
+            $this->hostResolver($host, $region_id);
+        }
+    }
+
+    /**
+     * @codeCoverageIgnore
+     *
+     * @param string $host
+     * @param string $region_id
+     *
+     * @throws ClientException
+     * @throws ServerException
+     */
+    private function hostResolver(&$host, $region_id)
+    {
+        // 2. Find host by rules.
+        if ($this->endpointRegional !== null) {
+            $host = AlibabaCloud::resolveHostByRule($this);
+        }
+
+        // 3. Find in the local array file.
+        if (!$host) {
+            $host = AlibabaCloud::resolveHost($this->product, $region_id);
+        }
+
+        // 4. Find in the Location service.
+        if (!$host && $this->serviceCode) {
+            $host = LocationService::resolveHost($this);
         }
     }
 
@@ -169,6 +248,10 @@ trait AcsTrait
 
         if (AlibabaCloud::getDefaultRegionId() !== null) {
             return AlibabaCloud::getDefaultRegionId();
+        }
+
+        if ($this->product && AlibabaCloud::isGlobalProduct($this->product)) {
+            return 'global';
         }
 
         throw new ClientException("Missing required 'RegionId' for Request", SDK::INVALID_REGION_ID);

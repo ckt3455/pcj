@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\behaviors;
@@ -33,7 +33,7 @@ use yii\helpers\ArrayHelper;
  * public function behaviors()
  * {
  *     return [
- *         OptimisticLockBehavior::className(),
+ *         OptimisticLockBehavior::class,
  *     ];
  * }
  * ```
@@ -118,7 +118,7 @@ class OptimisticLockBehavior extends AttributeBehavior
             return $this->_lockAttribute;
         }
 
-        /* @var $owner BaseActiveRecord */
+        /** @var BaseActiveRecord $owner */
         $owner = $this->owner;
         $lock = $owner->optimisticLock();
         if ($lock === null || $owner->hasAttribute($lock) === false) {
@@ -159,7 +159,7 @@ class OptimisticLockBehavior extends AttributeBehavior
      */
     public function upgrade()
     {
-        /* @var $owner BaseActiveRecord */
+        /** @var BaseActiveRecord $owner */
         $owner = $this->owner;
         if ($owner->getIsNewRecord()) {
             throw new InvalidCallException('Upgrading the model version is not possible on a new record.');

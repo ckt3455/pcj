@@ -1,7 +1,18 @@
-yii2-popover-x
-=================
+<h1 align="center">
+    <a href="http://demos.krajee.com" title="Krajee Demos" target="_blank">
+        <img src="http://kartik-v.github.io/bootstrap-fileinput-samples/samples/krajee-logo-b.png" alt="Krajee Logo"/>
+    </a>
+    <br>
+    yii2-popover-x
+    <hr>
+    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DTP3NZQ6G2AYU"
+       title="Donate via Paypal" target="_blank">
+        <img src="http://kartik-v.github.io/bootstrap-fileinput-samples/samples/donate.png" alt="Donate"/>
+    </a>
+</h1>
 
-[![Latest Stable Version](https://poser.pugx.org/kartik-v/yii2-popover-x/v/stable)](https://packagist.org/packages/kartik-v/yii2-popover-x)
+[![Stable Version](https://poser.pugx.org/kartik-v/yii2-popover-x/v/stable)](https://packagist.org/packages/kartik-v/yii2-popover-x)
+[![Untable Version](https://poser.pugx.org/kartik-v/yii2-popover-x/v/unstable)](https://packagist.org/packages/kartik-v/yii2-popover-x)
 [![License](https://poser.pugx.org/kartik-v/yii2-popover-x/license)](https://packagist.org/packages/kartik-v/yii2-popover-x)
 [![Total Downloads](https://poser.pugx.org/kartik-v/yii2-popover-x/downloads)](https://packagist.org/packages/kartik-v/yii2-popover-x)
 [![Monthly Downloads](https://poser.pugx.org/kartik-v/yii2-popover-x/d/monthly)](https://packagist.org/packages/kartik-v/yii2-popover-x)
@@ -11,7 +22,7 @@ An extended popover widget for Yii Framework 2 based on the [bootstrap-popover-x
 is an extended popover JQuery plugin which combines both the popover and bootstrap modal features and includes various new styling enhancements. This widget
 can be setup just like the builtin `yii\bootstrap\Modal`, with some additional enhancements.
 
-> NOTE: The latest version of the plugin v1.3.4 has been released. Refer the [CHANGE LOG](https://github.com/kartik-v/yii2-popover-x/blob/master/CHANGE.md) for details.
+> NOTE: Refer the [CHANGE LOG](https://github.com/kartik-v/yii2-popover-x/blob/master/CHANGE.md) for details on changes to various releases.
 
 ## Features  
 

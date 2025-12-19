@@ -1,1 +1,1 @@
-<?phpreturn [    'adminEmail'      => '342214783@qq.com',    'supportEmail'    => '342214783@qq.com',    'user.passwordResetTokenExpire' => 3600,    'image_upload'=>['imgMaxSize'=>2*1024*1024],];
+<?phpreturn [    'adminEmail'      => '342214783@qq.com',    'supportEmail'    => '342214783@qq.com',    'user.passwordResetTokenExpire' => 3600,    'image_upload'=>['imgMaxSize'=>2*1024*1024],];

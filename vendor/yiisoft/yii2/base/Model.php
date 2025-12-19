@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\base;
@@ -37,22 +37,30 @@ use yii\validators\Validator;
  *
  * For more details and usage information on Model, see the [guide article on models](guide:structure-models).
  *
- * @property \yii\validators\Validator[] $activeValidators The validators applicable to the current
- * [[scenario]]. This property is read-only.
+ * @property-read \yii\validators\Validator[] $activeValidators The validators applicable to the current
+ * [[scenario]].
  * @property array $attributes Attribute values (name => value).
- * @property array $errors An array of errors for all attributes. Empty array is returned if no error. The
- * result is a two-dimensional array. See [[getErrors()]] for detailed description. This property is read-only.
- * @property array $firstErrors The first errors. The array keys are the attribute names, and the array values
- * are the corresponding error messages. An empty array will be returned if there is no error. This property is
- * read-only.
- * @property ArrayIterator $iterator An iterator for traversing the items in the list. This property is
- * read-only.
+ * @property-read array $errors Errors for all attributes or the specified attribute. Empty array is returned
+ * if no error. See [[getErrors()]] for detailed description. Note that when returning errors for all attributes,
+ * the result is a two-dimensional array, like the following: ```php [ 'username' => [ 'Username is required.',
+ * 'Username must contain only word characters.', ], 'email' => [ 'Email address is invalid.', ] ] ``` .
+ * @property-read array $firstErrors The first errors. The array keys are the attribute names, and the array
+ * values are the corresponding error messages. An empty array will be returned if there is no error.
  * @property string $scenario The scenario that this model is in. Defaults to [[SCENARIO_DEFAULT]].
- * @property ArrayObject|\yii\validators\Validator[] $validators All the validators declared in the model.
- * This property is read-only.
+ * @property-read ArrayObject|\yii\validators\Validator[] $validators All the validators declared in the
+ * model.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @phpstan-property array<string, mixed> $attributes
+ * @psalm-property array<string, mixed> $attributes
+ *
+ * @phpstan-property-read array<string, string[]> $errors
+ * @psalm-property-read array<string, string[]> $errors
+ *
+ * @phpstan-property-read array<string, string> $firstErrors
+ * @psalm-property-read array<string, string> $firstErrors
  */
 class Model extends Component implements StaticInstanceInterface, IteratorAggregate, ArrayAccess, Arrayable
 {
@@ -152,6 +160,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      *
      * @return array validation rules
      * @see scenarios()
+     *
+     * @phpstan-return array<int|string, mixed>[]
+     * @psalm-return array<int|string, mixed>[]
      */
     public function rules()
     {
@@ -182,6 +193,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * are being validated by the validation rules that apply to the scenario.
      *
      * @return array a list of scenarios and the corresponding active attributes.
+     *
+     * @phpstan-return array<string, string[]>
+     * @psalm-return array<string, string[]>
      */
     public function scenarios()
     {
@@ -260,9 +274,11 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
     /**
      * Returns the list of attribute names.
+     *
      * By default, this method returns all public non-static properties of the class.
      * You may override this method to change the default behavior.
-     * @return array list of attribute names.
+     *
+     * @return string[] list of attribute names.
      */
     public function attributes()
     {
@@ -292,6 +308,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      *
      * @return array attribute labels (name => label)
      * @see generateAttributeLabel()
+     *
+     * @phpstan-return array<string, string>
+     * @psalm-return array<string, string>
      */
     public function attributeLabels()
     {
@@ -312,6 +331,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      *
      * @return array attribute hints (name => hint)
      * @since 2.0.4
+     *
+     * @phpstan-return array<string, string>
+     * @psalm-return array<string, string>
      */
     public function attributeHints()
     {
@@ -334,9 +356,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * Errors found during the validation can be retrieved via [[getErrors()]],
      * [[getFirstErrors()]] and [[getFirstError()]].
      *
-     * @param string[]|string $attributeNames attribute name or list of attribute names that should be validated.
-     * If this parameter is empty, it means any attribute listed in the applicable
-     * validation rules should be validated.
+     * @param string[]|string|null $attributeNames attribute name or list of attribute names
+     * that should be validated. If this parameter is empty, it means any attribute listed in
+     * the applicable validation rules should be validated.
      * @param bool $clearErrors whether to call [[clearErrors()]] before performing validation
      * @return bool whether the validation is successful without any error.
      * @throws InvalidArgumentException if the current scenario is unknown.
@@ -425,7 +447,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
     /**
      * Returns the validators applicable to the current [[scenario]].
-     * @param string $attribute the name of the attribute whose applicable validators should be returned.
+     * @param string|null $attribute the name of the attribute whose applicable validators should be returned.
      * If this is null, the validators for ALL attributes in the model will be returned.
      * @return \yii\validators\Validator[] the validators applicable to the current [[scenario]].
      */
@@ -560,10 +582,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
     /**
      * Returns the errors for all attributes or a single attribute.
-     * @param string $attribute attribute name. Use null to retrieve errors for all attributes.
-     * @property array An array of errors for all attributes. Empty array is returned if no error.
-     * The result is a two-dimensional array. See [[getErrors()]] for detailed description.
+     * @param string|null $attribute attribute name. Use null to retrieve errors for all attributes.
      * @return array errors for all attributes or the specified attribute. Empty array is returned if no error.
+     * See [[getErrors()]] for detailed description.
      * Note that when returning errors for all attributes, the result is a two-dimensional array, like the following:
      *
      * ```php
@@ -580,6 +601,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      *
      * @see getFirstErrors()
      * @see getFirstError()
+     *
+     * @phpstan-return array<string, string[]>
+     * @psalm-return array<string, string[]>
      */
     public function getErrors($attribute = null)
     {
@@ -596,6 +620,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * values are the corresponding error messages. An empty array will be returned if there is no error.
      * @see getErrors()
      * @see getFirstError()
+     *
+     * @phpstan-return array<string, string>
+     * @psalm-return array<string, string>
      */
     public function getFirstErrors()
     {
@@ -616,7 +643,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
     /**
      * Returns the first error of the specified attribute.
      * @param string $attribute attribute name.
-     * @return string the error message. Null is returned if no error.
+     * @return string|null the error message. Null is returned if no error.
      * @see getErrors()
      * @see getFirstErrors()
      */
@@ -633,13 +660,16 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * @see getErrors()
      * @see getFirstErrors()
      * @since 2.0.14
+     *
+     * @phpstan-return string[]
+     * @psalm-return string[]
      */
     public function getErrorSummary($showAllErrors)
     {
         $lines = [];
         $errors = $showAllErrors ? $this->getErrors() : $this->getFirstErrors();
         foreach ($errors as $es) {
-            $lines = array_merge((array)$es, $lines);
+            $lines = array_merge($lines, (array)$es);
         }
         return $lines;
     }
@@ -677,7 +707,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
     /**
      * Removes errors for all attributes or a single attribute.
-     * @param string $attribute attribute name. Use null to remove errors for all attributes.
+     * @param string|null $attribute attribute name. Use null to remove errors for all attributes.
      */
     public function clearErrors($attribute = null)
     {
@@ -703,11 +733,14 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
     /**
      * Returns attribute values.
-     * @param array $names list of attributes whose value needs to be returned.
+     * @param array|null $names list of attributes whose value needs to be returned.
      * Defaults to null, meaning all attributes listed in [[attributes()]] will be returned.
      * If it is an array, only the attributes in the array will be returned.
      * @param array $except list of attributes whose value should NOT be returned.
      * @return array attribute values (name => value).
+     *
+     * @phpstan-return array<string, mixed>
+     * @psalm-return array<string, mixed>
      */
     public function getAttributes($names = null, $except = [])
     {
@@ -787,6 +820,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
     /**
      * Returns the attribute names that are safe to be massively assigned in the current scenario.
+     *
      * @return string[] safe attribute names
      */
     public function safeAttributes()
@@ -798,7 +832,11 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
         }
         $attributes = [];
         foreach ($scenarios[$scenario] as $attribute) {
-            if ($attribute[0] !== '!' && !in_array('!' . $attribute, $scenarios[$scenario])) {
+            if (
+                $attribute !== ''
+                && strncmp($attribute, '!', 1) !== 0
+                && !in_array('!' . $attribute, $scenarios[$scenario])
+            ) {
                 $attributes[] = $attribute;
             }
         }
@@ -856,7 +894,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * Note, that the data being populated is subject to the safety check by [[setAttributes()]].
      *
      * @param array $data the data array to load, typically `$_POST` or `$_GET`.
-     * @param string $formName the form name to use to load the data into the model.
+     * @param string|null $formName the form name to use to load the data into the model, empty string when form not use.
      * If not set, [[formName()]] is used.
      * @return bool whether `load()` found the expected form in `$data`.
      */
@@ -886,7 +924,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * @param array $models the models to be populated. Note that all models should have the same class.
      * @param array $data the data array. This is usually `$_POST` or `$_GET`, but can also be any valid array
      * supplied by end user.
-     * @param string $formName the form name to be used for loading the data into the models.
+     * @param string|null $formName the form name to be used for loading the data into the models.
      * If not set, it will use the [[formName()]] value of the first model in `$models`.
      * This parameter is available since version 2.0.1.
      * @return bool whether at least one of the models is successfully populated.
@@ -894,7 +932,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
     public static function loadMultiple($models, $data, $formName = null)
     {
         if ($formName === null) {
-            /* @var $first Model|false */
+            /** @var self|false $first */
             $first = reset($models);
             if ($first === false) {
                 return false;
@@ -904,7 +942,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
         $success = false;
         foreach ($models as $i => $model) {
-            /* @var $model Model */
+            /** @var self $model */
             if ($formName == '') {
                 if (!empty($data[$i]) && $model->load($data[$i], '')) {
                     $success = true;
@@ -922,7 +960,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * This method will validate every model. The models being validated may
      * be of the same or different types.
      * @param array $models the models to be validated
-     * @param array $attributeNames list of attribute names that should be validated.
+     * @param array|null $attributeNames list of attribute names that should be validated.
      * If this parameter is empty, it means any attribute listed in the applicable
      * validation rules should be validated.
      * @return bool whether all models are valid. False will be returned if one
@@ -931,7 +969,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
     public static function validateMultiple($models, $attributeNames = null)
     {
         $valid = true;
-        /* @var $model Model */
+        /** @var self $model */
         foreach ($models as $model) {
             $valid = $model->validate($attributeNames) && $valid;
         }
@@ -996,6 +1034,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * This method is required by the interface [[\IteratorAggregate]].
      * @return ArrayIterator an iterator for traversing the items in the list.
      */
+    #[\ReturnTypeWillChange]
     public function getIterator()
     {
         $attributes = $this->getAttributes();
@@ -1006,9 +1045,10 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * Returns whether there is an element at the specified offset.
      * This method is required by the SPL interface [[\ArrayAccess]].
      * It is implicitly called when you use something like `isset($model[$offset])`.
-     * @param mixed $offset the offset to check on.
+     * @param string $offset the offset to check on.
      * @return bool whether or not an offset exists.
      */
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return isset($this->$offset);
@@ -1018,9 +1058,10 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * Returns the element at the specified offset.
      * This method is required by the SPL interface [[\ArrayAccess]].
      * It is implicitly called when you use something like `$value = $model[$offset];`.
-     * @param mixed $offset the offset to retrieve element.
+     * @param string $offset the offset to retrieve element.
      * @return mixed the element at the offset, null if no element is found at the offset
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->$offset;
@@ -1029,23 +1070,36 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
     /**
      * Sets the element at the specified offset.
      * This method is required by the SPL interface [[\ArrayAccess]].
-     * It is implicitly called when you use something like `$model[$offset] = $item;`.
-     * @param int $offset the offset to set element
-     * @param mixed $item the element value
+     * It is implicitly called when you use something like `$model[$offset] = $value;`.
+     * @param string $offset the offset to set element
+     * @param mixed $value the element value
      */
-    public function offsetSet($offset, $item)
+    #[\ReturnTypeWillChange]
+    public function offsetSet($offset, $value)
     {
-        $this->$offset = $item;
+        $this->$offset = $value;
     }
 
     /**
      * Sets the element value at the specified offset to null.
      * This method is required by the SPL interface [[\ArrayAccess]].
      * It is implicitly called when you use something like `unset($model[$offset])`.
-     * @param mixed $offset the offset to unset element
+     * @param string $offset the offset to unset element
      */
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         $this->$offset = null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __clone()
+    {
+        parent::__clone();
+
+        $this->_errors = null;
+        $this->_validators = null;
     }
 }

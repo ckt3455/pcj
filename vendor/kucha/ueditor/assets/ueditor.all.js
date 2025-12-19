@@ -3,7 +3,7 @@
  * version: ueditor
  * build: Thu May 29 2014 16:47:49 GMT+0800 (中国标准时间)
  */
-/*aaaa*/
+
 (function(){
 
 // editor.js
@@ -9948,7 +9948,7 @@ UE.plugins['defaultfilter'] = function () {
     var me = this;
     me.setOpt({
         'allowDivTransToP':false,
-        'disabledTableInTable':true
+        'disabledTableInTable':false
     });
     //默认的过滤处理
     //进入编辑器的内容处理
@@ -10082,17 +10082,16 @@ UE.plugins['defaultfilter'] = function () {
                     case 'dd':
                         node.tagName = 'li';
                         break;
-                        //把li里面的样式去掉
-                    // case 'li':
-                    //     var className = node.getAttr('class');
-                    //     if (!className || !/list\-/.test(className)) {
-                    //         node.setAttr()
-                    //     }
-                    //     var tmpNodes = node.getNodesByTagName('ol ul');
-                    //     UE.utils.each(tmpNodes, function (n) {
-                    //         node.parentNode.insertAfter(n, node);
-                    //     });
-                    //     break;
+                    case 'li':
+                        var className = node.getAttr('class');
+                        if (!className || !/list\-/.test(className)) {
+                            node.setAttr()
+                        }
+                        var tmpNodes = node.getNodesByTagName('ol ul');
+                        UE.utils.each(tmpNodes, function (n) {
+                            node.parentNode.insertAfter(n, node);
+                        });
+                        break;
                     case 'td':
                     case 'th':
                     case 'caption':
