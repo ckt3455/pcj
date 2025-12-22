@@ -20,19 +20,6 @@ return [
                 ],
             ],
         ],
-        'controllerMap' => [
-            'swoole' => [
-                'class' => 'feehi\console\SwooleController',
-                'tcp' => [
-                    'host' => '0.0.0.0',
-                    'port' => 8081,  // 指定TCP监听端口
-                    'worker_num' => 4,
-                    'open_tcp_keepalive' => 1,
-                    'heartbeat_check_interval' => 60,
-                    'heartbeat_idle_time' => 600
-                ]
-            ]
-        ]
     ],
     'params' => $params,
 ];
