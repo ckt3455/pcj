@@ -9,14 +9,20 @@ require(__DIR__ . '/../../backend/config/bootstrap.php');
 
 $config = yii\helpers\ArrayHelper::merge(
     require(__DIR__ . '/../../common/config/main.php'),
-    require(__DIR__ . '/../../common/config/main-local.php'),
     require(__DIR__ . '/../../backend/config/main.php'),
-    require(__DIR__ . '/../../backend/config/main-local.php')
 );
 
-$application = new yii\web\Application($config);
-if(!isset(Yii::$app->session['language'])){
-    Yii::$app->session['language']='zh-CN';
+$configFiles = [
+    require(__DIR__ . '/../../common/config/main.php'),
+    require(__DIR__ . '/../../backend/config/main.php'),
+];
+foreach (['common','backend'] as $env) {
+    $localConfig = __DIR__ . "/../../$env/config/main-local.php";
+    if (file_exists($localConfig)) {
+        $configFiles[] = require($localConfig);
+    }
 }
-$application->language = isset(Yii::$app->session['language']) ? Yii::$app->session['language'] : 'zh-CN';
+$config = call_user_func_array([yii\helpers\ArrayHelper::class, 'merge'], $configFiles);
+
+$application = new yii\web\Application($config);
 $application->run();

@@ -45,7 +45,7 @@ class Goods extends \yii\db\ActiveRecord
     ];
 
     public static $hot = [
-        1=>'今日爆品',
+        1=>'首页推荐',
         2=>'为你推荐',
     ];
     public static $status = [

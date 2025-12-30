@@ -964,7 +964,7 @@ class Helper
         }
     }
 
-     public static function curl($param = '', $url, $type = 1)
+     public static function curl($param, $url, $type = 1)
     {
 
         $postUrl = $url;

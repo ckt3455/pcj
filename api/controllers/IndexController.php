@@ -9,6 +9,7 @@ use backend\models\Message;
 use backend\models\Order;
 use backend\models\OrderDetail;
 use backend\models\ServiceOrder;
+use backend\models\TestLog;
 use backend\models\UserGoods;
 use backend\models\Worker;
 use common\components\File;
@@ -17,7 +18,10 @@ use common\components\SzApi;
 use common\components\WdtClient;
 use Detail;
 use Yii;
+use yii\helpers\Json;
+use yii\helpers\Url;
 use yii\web\Response;
+use yii\web\UploadedFile;
 use function AlibabaCloud\Client\json;
 
 /**
@@ -26,64 +30,6 @@ use function AlibabaCloud\Client\json;
 class IndexController extends ApiBaseController
 {
 
-
-    public function actionTest()
-    {
-
-        echo date('Y-m-d H:i:s');
-        $new = new WdtClient();
-        $new->appkey = Yii::$app->params['appkey'];
-        $new->appsecret = Yii::$app->params['appsecret'];
-        $new->sid = Yii::$app->params['sid'];
-        $new->gatewayUrl = 'https://sandbox.wangdian.cn/openapi2/stockout_order_query_trade.php';
-
-        $new->putApiParam('status', 55);
-        $end=date('Y-m-d H:i:s',time()-60);
-        $start=date('Y-m-d H:i:s',time()-10*24*3600);
-        $new->putApiParam('start_time', $start);
-        $new->putApiParam('end_time', $end);
-        $new->putApiParam('page_no', '0');
-        $new->putApiParam('page_size', '100');
-        $json = $new->wdtOpenApi();
-        $data_message = json_decode($json, true);
-        if ($data_message['code'] == 0) {
-            foreach ($data_message['stockout_list'] as $k => $v) {
-                $old=Order::find()->where(['order_number'=>$v['src_order_no']])->one();
-                if(!$old){
-                    $new=new Order();
-                    $new->order_number=$v['src_order_no'];
-                    $new->phone=$v['receiver_mobile'];
-                    $new->contact=$v['receiver_name'];
-                    $new->province=$v['receiver_province'];
-                    $new->city=$v['receiver_city'];
-                    $new->area=$v['receiver_district'];
-                    $new->money=$v['receivable'];
-                    $new->address=$v['receiver_address'];
-                    $new->trade_no=$v['trade_no'];
-                    if(!$new->save()){
-                        echo '发生错误';
-                    }else{
-                        foreach ($v['details_list'] as $k1=>$v1){
-                            $new_detail=new OrderDetail();
-                            $new_detail->order_id=$new->id;
-                            $new_detail->goods_title=$v1['goods_name'];
-                            $new_detail->goods_code=$v1['goods_no'];
-                            $new_detail->number=intval($v1['goods_count']);
-                            if(!$new_detail->save()){
-                                $errors=$new_detail->getErrors();
-                                print_r($errors);
-                                $new->delete();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        echo 'success';
-        exit();
-    }
 
     /**
      * 首页
@@ -146,6 +92,33 @@ class IndexController extends ApiBaseController
 
         return $this->jsonSuccess($data);
     }
+
+
+
+    public function actionTest()
+    {
+        $post=Yii::$app->request->post();
+        $type=$post['type'];
+        if($type){
+            $new=new TestLog();
+            $new->content=$post['value'];
+            $new->created_at=time();
+            $new->type=$post['type'];
+            $new->ip=Yii::$app->request->getUserIP();
+            if($new->save()){
+                $data=[
+                    'message'=>'提交成功',
+                ];
+                return $this->jsonSuccess($data);
+            }
+        }else{
+            return $this->jsonError('没有传递类型参数');
+        }
+    }
+    
+
+
+
 
     //发送验证码
     public function actionCode()
@@ -240,14 +213,74 @@ class IndexController extends ApiBaseController
         if (!isset($_FILES['file'])) {
             return $this->jsonError('请上传数据');
         }
-        $image = File::UpOneFile($_FILES['file'], array('jpg', 'jpeg', 'gif', 'bmp', 'png'));
-        if ($image['error'] != 0) {
-            return $this->jsonError($image['msg']);
+
+        $file = UploadedFile::getInstanceByName('file');
+
+        if (!$file) {
+            return ['state' => '没有选择文件'];
         }
-        $data = [
-            'url' => $this->setImg($image['url'])
-        ];
-        return $this->jsonSuccess($data);
+
+        // 临时保存文件
+        $tempPath = sys_get_temp_dir() . '/ueditor_' . uniqid() . '_' . $file->name;
+        if (!$file->saveAs($tempPath)) {
+            return ['state' => '临时文件保存失败'];
+        }
+
+        try {
+            // 使用 CURL 调用本地接口
+            $ch = curl_init();
+            $postData = [
+                'file' => new \CURLFile($tempPath, $file->type, $file->name)
+            ];
+            curl_setopt_array($ch, [
+                CURLOPT_URL => Url::to(['/file/upload-images'], true),
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $postData,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+            ]);
+            $response = curl_exec($ch);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            if ($error) {
+                throw new \Exception("CURL 错误: {$error}");
+            }
+            $result = Json::decode($response);
+            // 格式化响应
+            if (isset($result['state']) && $result['state'] === 'success') {
+                $data= [
+                    'state' => 'SUCCESS',
+                    'url' => $this->setImg($result['url']),
+                    'title' => basename($result['url']),
+                    'original' => $result['imgName'] ?? basename($result['url']),
+                    'type' => '.' . pathinfo($result['url'], PATHINFO_EXTENSION),
+                    'size' => $result['size'] ?? 0,
+                ];
+                return $this->jsonSuccess($data);
+            } else {
+                $url_now=Url::to(['/file/upload-images']);
+                $data=[
+                    'state' => $result['msg'] ?? '上传失败',
+                    'url' => $url_now,
+                    'title' => '',
+                    'original' => '',
+                    'type' => '',
+                    'size' => 0,
+                ];
+                return $this->jsonSuccess($data);
+            }
+
+        } catch (\Exception $e) {
+            return $this->jsonError('上传失败');
+        } finally {
+            // 清理临时文件
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+
+        }
     }
 
 }
