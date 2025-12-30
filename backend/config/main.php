@@ -4,6 +4,15 @@ $params = array_merge(
     require __DIR__ . '/../../common/config/key.php',
     require(__DIR__ . '/params.php'),
 );
+$localConfig = __DIR__ . "/params-local.php";
+if (file_exists($localConfig)) {
+    $params[] = require($localConfig);
+}
+
+$localConfig2 = __DIR__ . "/../../common/config/params-local.php";
+if (file_exists($localConfig)) {
+    $params[] = require($localConfig2);
+}
 
 return [
     'id'                   => 'app-backend',
