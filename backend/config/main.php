@@ -42,6 +42,7 @@ return [
             ],
         ],
 
+
         /**-------------------错误定向页-------------------**/
         'errorHandler' => [
             'errorAction' => 'site/error',
