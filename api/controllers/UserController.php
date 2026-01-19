@@ -3,10 +3,15 @@
 namespace api\controllers;
 
 use api\extensions\ApiBaseController;
+use api\services\GoodsQueryService;
+use api\services\UserCartQueryService;
+use api\services\UserIntLogService;
 use backend\models\Address;
 use backend\models\Icon;
 use backend\models\ServiceOrder;
 use backend\models\User;
+use backend\models\UserCart;
+use backend\models\UserIntLog;
 use backend\models\UserMessage;
 use common\components\Helper;
 use Yii;
@@ -84,6 +89,118 @@ class UserController extends ApiBaseController
 
         return $this->jsonSuccess($data);
     }
+
+
+
+    public function actionCart()
+    {
+        $params = Yii::$app->request->post();
+
+        $user_message=User::decrypt($params['token']);
+        // 自定义验证规则
+        $customRules = [];
+        $rules = $this->getRules(['token'],$customRules);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $search=['user_id'=>$user_message['user_id']];
+        $data =UserCartQueryService::searchModel($search);
+        return $this->jsonSuccess($data);
+    }
+
+
+    public function actionCartUpdate()
+    {
+        $params = Yii::$app->request->post();
+        // 自定义验证规则
+        $customRules = [
+            [['cart_id'], 'required', 'message' => 'id不能为空'],
+            [['type'], 'required', 'message' => 'type不能为空'],
+        ];
+        $rules = $this->getRules(['token'],$customRules);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $model=UserCart::findOne($params['cart_id']);
+        if(!$model){
+            return $this->jsonError('已被移除');
+        }else{
+            if($params['type']==1){
+                $model->updateCounters(['number'=>1]);
+            }elseif ($params['type']==2){
+                if($model->number>1){
+                    $model->updateCounters(['number'=>-1]);
+                }
+            }else{
+                if($params['number']>0){
+                    $model->number=$params['number'];
+                    if(!$model->save()){
+                        return $this->jsonError('修改失败');
+                    }
+                }else{
+                    return $this->jsonError('数量不正确');
+                }
+
+            }
+        }
+
+        $data=[
+            'message'=>'修改成功'
+        ];
+        return $this->jsonSuccess($data);
+    }
+
+
+
+
+    public function actionCartDelete()
+    {
+        $params = Yii::$app->request->post();
+        // 自定义验证规则
+        $customRules = [
+            [['cart_id'], 'required', 'message' => 'id不能为空'],
+        ];
+        $rules = $this->getRules(['token'],$customRules);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $model=UserCart::findOne($params['cart_id']);
+        if(!$model){
+            return $this->jsonError('已被移除');
+        }else{
+           $model->delete();
+        }
+
+        $data=[
+            'message'=>'删除成功'
+        ];
+        return $this->jsonSuccess($data);
+    }
+
+
+    public function actionCartDeleteAll()
+    {
+        $params = Yii::$app->request->post();
+        $user_message=User::decrypt($params['token']);
+        // 自定义验证规则
+        $customRules = [];
+        $rules = $this->getRules(['token'],$customRules);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        UserCart::deleteAll(['user_id'=>$user_message['user_id']]);
+        $data=[
+            'message'=>'删除成功'
+        ];
+        return $this->jsonSuccess($data);
+    }
+
+
+
 
 
 
@@ -311,14 +428,15 @@ class UserController extends ApiBaseController
     {
         $params = Yii::$app->request->post();
         $customRules = [];
-        $rules = $this->getRules(['user_id'],$customRules);
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
         $validate = $this->validateParams($params, $rules);
         if ($validate) {
             return $this->jsonError($validate);
         }
         $page=Yii::$app->request->get('page',1);
         $page_number=Yii::$app->request->get('page',10);
-        $query=UserMessage::find()->where(['user_id'=>$params['user_id']]);
+        $query=UserMessage::find()->where(['user_id'=>$user_message['user_id']]);
         $sort_value = 'id desc';
         $sort = Yii::$app->request->post('sort', 1);
         if ($sort == 2) {
@@ -350,6 +468,24 @@ class UserController extends ApiBaseController
         }
         //更新状态为已读
         UserMessage::updateAll(['is_read'=>1],['user_id'=>$params['user_id']]);
+        return $this->jsonSuccess($data);
+
+    }
+
+
+    //积分记录
+    public function actionIntLog()
+    {
+        $params = Yii::$app->request->post();
+        $customRules = [];
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $params['user_id']=$user_message['user_id'];
+        $data = UserIntLogService::searchModel($params);
         return $this->jsonSuccess($data);
 
     }

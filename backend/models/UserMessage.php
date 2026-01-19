@@ -58,8 +58,9 @@ class UserMessage extends \yii\db\ActiveRecord
 
 
     public static $type_message=[
-        1=>'服务',
-        2=>'系统'
+        1=>'系统',
+        2=>'订单',
+        3=>'设备'
     ];
 
     /**

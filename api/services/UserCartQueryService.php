@@ -1,12 +1,14 @@
 <?php
 namespace api\services;
 use backend\models\Goods;
+use backend\models\GoodsOption;
 use backend\models\GoodsSpec;
+use backend\models\UserCart;
 use common\components\Helper;
 use Yii;
 use yii\db\ActiveQuery;
 
-class GoodsQueryService
+class UserCartQueryService
 {
     /**
      * 构建订单查询
@@ -15,13 +17,7 @@ class GoodsQueryService
      */
     public static function buildQuery($params = [])
     {
-        $query = Goods::find()->where(['type'=>1,'status'=>1]);
-        if(isset($params['category_id'])){
-            $query->andWhere(['category_id' => $params['category_id']]);
-        }
-        if(isset($params['keywords'])){
-            $query->andWhere(['like', 'title', $params['keywords']]);
-        }
+        $query = UserCart::find()->where(['user_id'=>$params['user_id']]);
 
         return $query;
     }
@@ -74,20 +70,43 @@ class GoodsQueryService
             ->offset($offset)
             ->limit($pageSize)
             ->all();
-        $data_goods=[];
+        $data=[];
         foreach ($models as $k=>$v){
+            $goods=Goods::findOne($v->goods_id);
+            if($v->sku_id>0){
+                $sku=GoodsOption::findOne($v->sku_id);
+                if($goods and $sku){
+                    $data[]=[
+                        'cart_id'=>$v->id,
+                        'title'=>$goods->title,
+                        'price'=>$sku->price,
+                        'crossed_price'=>$sku->crossed_price,
+                        'image'=>Helper::setImg($goods['thumb']),
+                        'status'=>$goods->status,
+                        'number'=>$v->number,
+                        'sku_title'=>$sku->title,
+                    ];
+                }
+            }else{
+                if($goods){
+                    $data[]=[
+                        'cart_id'=>$v->id,
+                        'title'=>$goods->title,
+                        'price'=>$goods->price,
+                        'crossed_price'=>$goods->crossed_price,
+                        'image'=>Helper::setImg($goods['thumb']),
+                        'status'=>$goods->status,
+                        'number'=>$v->number,
+                        'sku_title'=>''
+                    ];
+                }
+            }
 
-            $data_goods[]=[
-                'goods_id'=>$v->id,
-                'title'=>$v->title,
-                'price'=>$v->price,
-                'sales'=>$v->sales,
-                'crossed_price'=>$v->crossed_price,
-                'image'=>Helper::setImg($v['thumb']),
-            ];
+
+
         }
         return [
-            'goods' => $data_goods,
+            'data' => $data,
             'pagination' => [
                 'total_count' => $totalCount,
                 'total_page' => $totalPage,
@@ -113,7 +132,6 @@ class GoodsQueryService
             'title'=>$goods->title,
             'price'=>$goods->price,
             'crossed_price'=>$goods->crossed_price,
-            'sales'=>$goods->sales,
             'image'=>Helper::setImg($goods['thumb']),
             'has_option'=>$goods->has_option,
             'sku'=>$sku

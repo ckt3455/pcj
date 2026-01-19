@@ -6,7 +6,7 @@ use common\components\Helper;
 use Yii;
 use yii\db\ActiveQuery;
 
-class GoodsQueryService
+class Goods2QueryService
 {
     /**
      * 构建订单查询
@@ -15,10 +15,7 @@ class GoodsQueryService
      */
     public static function buildQuery($params = [])
     {
-        $query = Goods::find()->where(['type'=>1,'status'=>1]);
-        if(isset($params['category_id'])){
-            $query->andWhere(['category_id' => $params['category_id']]);
-        }
+        $query = Goods::find()->where(['type'=>2,'status'=>1]);
         if(isset($params['keywords'])){
             $query->andWhere(['like', 'title', $params['keywords']]);
         }
@@ -112,7 +109,6 @@ class GoodsQueryService
             'goods_id' => $goods->id,
             'title'=>$goods->title,
             'price'=>$goods->price,
-            'crossed_price'=>$goods->crossed_price,
             'sales'=>$goods->sales,
             'image'=>Helper::setImg($goods['thumb']),
             'has_option'=>$goods->has_option,

@@ -95,46 +95,45 @@ class IndexController extends ApiBaseController
 
 
 
+
     public function actionTest()
     {
-        $post=Yii::$app->request->post();
-        if(!$post){
-            $input= file_get_contents('php://input');
-            $new=new TestLog();
-            $new->content=$input;
-            $new->created_at=time();
-            $new->type='';
-            $new->ip=Yii::$app->request->getUserIP();
-            if($new->save()){
-                $data=[
-                    'message'=>'提交成功',
+        $post = Yii::$app->request->post();
+        if (!$post) {
+            $input = file_get_contents('php://input');
+            if(!$input){
+                return $this->jsonError('没有数据');
+            }
+            $new = new TestLog();
+            $new->content = $input;
+            $new->created_at = time();
+            $new->type = '';
+            $new->ip = Yii::$app->request->getUserIP();
+            if ($new->save()) {
+                $data = [
+                    'message' => '提交成功',
                 ];
                 return $this->jsonSuccess($data);
-            }
-        }else{
-            if(!isset($post['type'])){
-                return $this->jsonError('提交错误');
-            }
-            $type=$post['type'];
-            if($type){
-                $new=new TestLog();
-                $new->content=$post['value'];
-                $new->created_at=time();
-                $new->type=$post['type'];
-                $new->ip=Yii::$app->request->getUserIP();
-                if($new->save()){
-                    $data=[
-                        'message'=>'提交成功',
-                    ];
-                    return $this->jsonSuccess($data);
-                }
             }else{
-                return $this->jsonError('没有传递类型参数');
+                return $this->jsonError('保存失败');
             }
-        }
+        } else {
 
+            $new = new TestLog();
+            $new->content = json_encode($post);
+            $new->created_at = time();
+            $new->ip = Yii::$app->request->getUserIP();
+            if ($new->save()) {
+                $data = [
+                    'message' => '提交成功',
+                ];
+                return $this->jsonSuccess($data);
+            }else{
+                return $this->jsonError('保存失败');
+            }
+
+        }
     }
-    
 
 
 

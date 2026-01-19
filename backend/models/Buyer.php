@@ -15,6 +15,7 @@ use yii\db\ActiveRecord;
  * @property float|null $goods_money
  * @property float|null $money
  * @property string|null $code
+ * @property string|null $title
  * @property string|null $province
  * @property string|null $city
  * @property string|null $area
@@ -45,6 +46,7 @@ class Buyer extends \yii\db\ActiveRecord
             [['user_id', 'level_id', 'created_at', 'updated_at'], 'integer'],
             [['goods_money', 'money'], 'number'],
             [['code'], 'string', 'max' => 20],
+            [['title'], 'string', 'max' => 100],
             [['province', 'city', 'area'], 'string', 'max' => 255],
         ];
     }
@@ -72,6 +74,7 @@ class Buyer extends \yii\db\ActiveRecord
             'id' => 'ID',
             'user_id' => '用户',
             'level_id' => '等级',
+            'title'=>'供货商名称',
             'goods_money' => '货款',
             'money' => '余额',
             'code' => 'Code',

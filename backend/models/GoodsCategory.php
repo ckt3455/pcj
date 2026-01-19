@@ -92,7 +92,7 @@ class GoodsCategory extends \yii\db\ActiveRecord
 
 
     public static function getList(){
-        $model=GoodsCategory::find()->where(['language'=>Yii::$app->language])->select(['id','title'])->asArray()->all();
+        $model=GoodsCategory::find()->select(['id','title'])->asArray()->all();
         return ArrayHelper::map($model,'id','title');
     }
 }
