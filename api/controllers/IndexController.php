@@ -36,7 +36,6 @@ class IndexController extends ApiBaseController
      * **/
     public function actionIndex()
     {
-
         $data = [
             'banner' => [],
             'banner2' => [],

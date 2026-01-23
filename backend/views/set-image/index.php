@@ -141,7 +141,7 @@ $get=Yii::$app->request->get();
 
                         [
                             'attribute' => 'sort',
-                            'visible'=>isset($get['sort']),
+                            'visible'=>isset($get['sort_value']),
                             'class' => 'kartik\grid\EditableColumn'
                         ],
                         [

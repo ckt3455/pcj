@@ -52,7 +52,8 @@ class SetImageSearch extends SetImage
                         'type'=>SORT_ASC,
                         'sort'=>SORT_ASC,
                         'id'=>SORT_DESC,
-                    ]
+                    ],
+
                 ],
         ]);
 
@@ -67,7 +68,6 @@ class SetImageSearch extends SetImage
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'sort' => $this->sort,
             'type'=>$this->type,
             'sign'=>$this->sign,
             'language'=>Yii::$app->language,

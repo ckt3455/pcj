@@ -3,10 +3,12 @@
 namespace api\controllers;
 
 use api\extensions\ApiBaseController;
+use api\services\OrderQueryService;
 use backend\models\Goods;
+use backend\models\GoodsOption;
 use backend\models\Order;
-use backend\models\OrderDetail;
-use backend\models\UserGoods;
+use backend\models\User;
+use backend\models\UserCart;
 use Yii;
 
 /**
@@ -15,136 +17,142 @@ use Yii;
 class OrderController extends ApiBaseController
 {
 
-    /**
-     * 搜索订单
-     **/
-    public function actionList()
-    {
-        $params = Yii::$app->request->post();
-        $data = [
-            'goods' => [],
-        ];
 
-        // 自定义验证规则
-        $customRules = [];
-        $rules = $this->getRules(['user_id','type'], $customRules);
+
+
+    //立即购买
+    public function actionBuy()
+    {
+
+        $params = Yii::$app->request->post();
+        $customRules = [
+            [['goods_id'], 'required', 'message' => '产品不能为空'],
+            [['address_id'], 'required', 'message' => '地址不能为空'],
+            [['number'], 'required', 'message' => '数量不能为空'],
+        ];
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
         $validate = $this->validateParams($params, $rules);
         if ($validate) {
             return $this->jsonError($validate);
         }
-        if($params['type'] == 1){
-            //根据订单搜索
-            if(!isset($params['order_number'])){
-                return $this->jsonError('请填写订单号');
+        $params['user_id']=$user_message['user_id'];
+        if(isset($params['sku_value']) and $params['sku_value']){
+            $sku=GoodsOption::find()->where(['goods_id'=>$params['goods_id'],'specs'=>$params['sku_value']])->limit(1)->one();
+            if(!$sku){
+                return $this->jsonError('规格不正确');
             }
-            $order=Order::find()->where(['order_number'=>$params['order_number'],'status'=>1])->limit(1)->one();
-            if(!$order){
-                return $this->jsonError('未找到相关订单');
-            }
-        }else{
-            if(!isset($params['mobile'])){
-                return $this->jsonError('请填写手机号');
-            }
-            $order=Order::find()->where(['phone'=>$params['mobile'],'status'=>1])->limit(1)->one();
-            if(!$order){
-                return $this->jsonError('未找到相关订单');
-            }
-        }
-
-        $detail_count=OrderDetail::find()->where(['order_id'=>$order['id'],'status'=>1])->count();
-        $detail=OrderDetail::find()->where(['order_id'=>$order['id'],'status'=>1])->all();
-        if($detail_count>0){
-            foreach ($detail as $k=>$v){
-                $now_goods=Goods::find()->where(['goods_code'=>$v->goods_code])->limit(1)->one();
-                $data['goods'][] = [
-                    'detail_id'=>$v['id'],
-                    'goods_name' => $v->goods_title,
-                    'goods_code' => $v->goods_code,
-                    'goods_image' => $this->setImg($now_goods['goods_image']),
-                    'is_index'=>1,
-                    'lx_alert'=>1,
-                    'goods_type'=>$v->goods_type,
-                    'goods_number'=>$now_goods['goods_number'],
-                ];
-            }
+            $value='sku_'.$sku['id'];
 
         }else{
-            return $this->jsonError('设备都已激活');
+            $value='goods_'.$params['goods_id'];
         }
 
+        $re=Order::addOrder($params['user_id'],[$value=>$params['number']],$params['address_id'],0,$params['content']);
 
+        if($re['error']==0){
+            $data=[
+                'message'=>'下单成功',
+                'order_id'=>$re['order_id']
+            ];
+            return $this->jsonSuccess($data);
+        }else{
+            return $this->jsonError($re['message']);
+        }
 
-
-        return $this->jsonSuccess($data);
     }
 
 
-
-    //激活设备
-    public function actionActivate()
+    //购物车购买
+    public function actionCartBuy()
     {
+
         $params = Yii::$app->request->post();
-        // 自定义验证规则
         $customRules = [
-            [['detail_id'],'required','message'=>'设备激活id必填'],
-            [['is_index'],'required','message'=>'首页显示状态必填'],
-            [['lx_alert'],'required','message'=>'滤芯提醒状态必填'],
+            [['cart_id'], 'required', 'message' => '购物车id不能为空'],
+            [['address_id'], 'required', 'message' => '地址不能为空'],
         ];
-        $rules = $this->getRules(['user_id'], $customRules);
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
         $validate = $this->validateParams($params, $rules);
         if ($validate) {
             return $this->jsonError($validate);
         }
-
-        $detail=OrderDetail::find()->where(['id'=>$params['detail_id'],'user_id'=>$params['user_id']])->limit(1)->one();
-        if($detail){
-            if($detail->status==1){
-                $now_goods=Goods::find()->where(['goods_code'=>$detail->goods_code])->limit(1)->one();
-                $new=new UserGoods();
-                $new->goods_code=$detail->goods_code;
-                $new->goods_name=$detail->goods_name;
-                $new->goods_image=$this->setImg($now_goods['goods_image']);
-                $new->goods_number=$now_goods['goods_number'];
-                $new->start_time=time();
-                $new->end_time=time()+24*3600*$now_goods['bx_days'];
-                $new->is_index=$params['is_index'];
-                $new->lx_alert=$params['is_index'];
-                $new->lx_day=$now_goods['lx_days']*1;
-                $new->lx_end_time=time()+24*3600*$now_goods['lx_days'];
-                $new->user_id=$params['user_id'];
-                if(!$new->save()){
-                    return $this->jsonError('激活失败');
-                }else{
-                    $detail->status=2;
-                    if(!$detail->save()){
-                        $new->delete();
-                    }else{
-                        $count_detail=OrderDetail::find()->where(['order_id'=>$detail['order_id'],'status'=>1])->count();
-                        if($count_detail==0){
-                            $order=Order::findOne($detail['order_id']);
-                            $order->status=2;
-                            if(!$order->save()){
-                                $new->delete();
-                                $detail->status=1;
-                                $detail->save();
-                                return $this->jsonError('激活失败');
-                            }
-                        }
-                    }
-                }
-
+        $params['user_id']=$user_message['user_id'];
+        $cart_ids=explode(',',$params['cart_id']);
+        $cart=UserCart::find()->where(['in','id',$cart_ids])->all();
+        $arr_value=[];
+        foreach ($cart as $k=>$v){
+            if($v['sku_id']){
+                $value='sku_'.$v['sku_id'];
+                $arr_value[$value]=$v['number'];
             }else{
-                return $this->jsonError('设备都已激活');
+                $value='goods_'.$v['goods_id'];
+                $arr_value[$value]=$v['number'];
             }
-        }else{
-            return $this->jsonError('设备激活id不正确');
         }
 
-        $data=[
-            'message'=>'激活成功'
-        ];
+        $re=Order::addOrder($params['user_id'],$arr_value,$params['address_id'],0,$params['content']);
 
-        return $this->jsonSuccess($data);
+        if($re['error']==0){
+            $data=[
+                'message'=>'下单成功',
+                'order_id'=>$re['order_id']
+            ];
+            UserCart::deleteAll(['in','id',$cart_ids]);
+            return $this->jsonSuccess($data);
+        }else{
+            return $this->jsonError($re['message']);
+        }
+
+    }
+
+
+    //订单列表
+    public function actionList()
+    {
+        $params = Yii::$app->request->post();
+        $customRules = [];
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $params['user_id']=$user_message['user_id'];
+        $params = Yii::$app->request->post();
+        $goods = OrderQueryService::searchModel($params);
+        return $this->jsonSuccess($goods);
+
+    }
+
+    public function actionCancel()
+    {
+        $params = Yii::$app->request->post();
+        $customRules = [
+            [['order_id'], 'required', 'message' => '订单id不能为空'],
+        ];
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $params['user_id']=$user_message['user_id'];
+        $order=Order::findOne($params['order_id']);
+        if($order and $order['user_id']==$params['user_id']){
+            $re=Order::cancel_order($order->id);
+            if($re['error']==0){
+                $data=[
+                    'message'=>'取消成功'
+                ];
+                return $this->jsonSuccess($data);
+            }else{
+                return $this->jsonError($re['message']);
+            }
+        }else{
+            return $this->jsonError('无法取消');
+        }
 
     }
 

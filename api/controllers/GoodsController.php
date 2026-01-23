@@ -6,12 +6,15 @@ use api\extensions\ApiBaseController;
 use api\services\Goods2QueryService;
 use api\services\GoodsQueryService;
 use api\services\UserGoodsQueryService;
+use api\services\UserIntLogService;
 use backend\models\Address;
 use backend\models\Goods;
 use backend\models\GoodsCategory;
 use backend\models\GoodsOption;
+use backend\models\IntGoodsCategory;
 use backend\models\SetImage;
 use backend\models\User;
+use backend\models\UserCart;
 use backend\models\UserGoods;
 use common\components\Helper;
 use Yii;
@@ -78,7 +81,21 @@ class GoodsController extends ApiBaseController
     }
 
 
+    public function actionIntCategory()
+    {
+        $category=IntGoodsCategory::find()->orderBy('sort asc')->all();
+        $data=[
+            'category'=>[],
+        ];
+        foreach ($category as $k=>$v){
+            $data['category'][]=[
+                'id'=>$v['id'],
+                'title'=>$v['title'],
+            ];
+        }
+        return $this->jsonSuccess($data);
 
+    }
 
 
 
@@ -140,53 +157,83 @@ class GoodsController extends ApiBaseController
     }
 
 
-    public function actionUpdate()
+    public function actionAddCart()
     {
         $params = Yii::$app->request->post();
-        $goods_id = YII::$app->request->post('goods_id');
-
-        // 自定义验证规则
         $customRules = [
-            [['goods_id'], 'required', 'message' => '设备id不能为空'],
+            [['goods_id'], 'required', 'message' => 'id不能为空'],
         ];
-        $rules = $this->getRules(['user_id'], $customRules);
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
         $validate = $this->validateParams($params, $rules);
         if ($validate) {
             return $this->jsonError($validate);
         }
+        $params['user_id']=$user_message['user_id'];
 
-        $goods = UserGoods::findOne($goods_id);
-        if(Yii::$app->request->post('is_index') !== null){
-            if(Yii::$app->request->post('is_index')==1){
-                $goods->is_index = 1;
+        $goods=Goods::findOne($params['goods_id']);
+
+        if($goods->has_option==1){
+            if(!$params['sku_value']){
+                return $this->jsonError('请选择规格');
             }else{
-                $goods->is_index = 0;
-            }
-        }
+                $sku=GoodsOption::find()->where(['goods_id'=>$params['goods_id'],'specs'=>$params['sku_value']])->limit(1)->one();
+                if(!$sku){
+                    return $this->jsonError('规格不正确');
+                }else{
+                    $old=UserCart::find()->where(['goods_id'=>$params,'user_id'=>$user_message['user_id'],'sku_id'=>$sku->id])->limit(1)->one();
+                    if($old){
+                        $old->created_at=time();
+                        $old->number++;
+                        if(!$old->save()){
+                            $error=$old->getFirstErrors();
+                            return $this->jsonError(reset($error));
+                        }
+                    }else{
+                        $new=new UserCart();
+                        $new->goods_id=$params['goods_id'];
+                        $new->number=1;
+                        $new->user_id=$params['user_id'];
+                        $new->created_at=time();
+                        $new->sku_id=$sku->id;
+                        if(!$new->save()){
+                            $error=$new->getFirstErrors();
+                            return $this->jsonError(reset($error));
+                        }
+                    }
 
-        if(Yii::$app->request->post('lx_alert') !== null){
-            if(Yii::$app->request->post('lx_alert')==1){
-                $goods->lx_alert = 1;
+                }
+            }
+        }else{
+            $old=UserCart::find()->where(['goods_id'=>$params,'user_id'=>$user_message['user_id']])->limit(1)->one();
+            if($old){
+                $old->created_at=time();
+                $old->number++;
+                if(!$old->save()){
+                    $error=$old->getFirstErrors();
+                    return $this->jsonError(reset($error));
+                }
             }else{
-                $goods->lx_alert = 0;
+                $new=new UserCart();
+                $new->goods_id=$params['goods_id'];
+                $new->number=1;
+                $new->user_id=$params['user_id'];
+                $new->created_at=time();
+                if(!$new->save()){
+                    $error=$new->getFirstErrors();
+                    return $this->jsonError(reset($error));
+                }
             }
         }
-
-        if(Yii::$app->request->post('lx_reset') !== null){
-            if(Yii::$app->request->post('lx_reset')==1){
-                $goods->lx_end_time = time()+$goods->lx_day*24*3600;
-            }
-        }
-        $data=[
-            'message'=>'修改成功'
+        $data = [
+            'message'=>'加入购物车成功'
         ];
-        if(!$goods->save()){
-            return $this->jsonError('修改失败');
-        }
-
-
         return $this->jsonSuccess($data);
+
     }
+
+
+
 
 
 }

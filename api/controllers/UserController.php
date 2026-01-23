@@ -5,12 +5,14 @@ namespace api\controllers;
 use api\extensions\ApiBaseController;
 use api\services\GoodsQueryService;
 use api\services\UserCartQueryService;
+use api\services\UserCouponsQueryService;
 use api\services\UserIntLogService;
 use backend\models\Address;
 use backend\models\Icon;
 use backend\models\ServiceOrder;
 use backend\models\User;
 use backend\models\UserCart;
+use backend\models\UserCoupons;
 use backend\models\UserIntLog;
 use backend\models\UserMessage;
 use common\components\Helper;
@@ -76,7 +78,6 @@ class UserController extends ApiBaseController
         $user_id=$user_message['user_id'];
         $user=User::findOne($user_id);
         $data=[
-            'user_id'=>$user_id,
             'name'=>$user['name'],
             'mobile'=>$user['mobile'],
             'image'=>$this->setImg($user['image']),
@@ -488,6 +489,23 @@ class UserController extends ApiBaseController
         $data = UserIntLogService::searchModel($params);
         return $this->jsonSuccess($data);
 
+    }
+
+
+    //优惠券列表
+    public function actionCoupons()
+    {
+        $params = Yii::$app->request->post();
+        $customRules = [];
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $params['user_id']=$user_message['user_id'];
+        $data=UserCouponsQueryService::searchModel($params);;
+        return $this->jsonSuccess($data);
     }
 
 

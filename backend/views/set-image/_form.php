@@ -323,7 +323,7 @@ $model->type = $message['type'];
     <?php if (isset($message['is_index'])) { ?>
         <?= $form->field($model, 'is_index')->radioList([0 => '否', 1 => '是']) ?>
     <?php } ?>
-    <?php if (isset($message['sort'])) { ?>
+    <?php if (isset($message['sort_value'])) { ?>
         <?= $form->field($model, 'sort')->textInput() ?>
     <?php } ?>
 

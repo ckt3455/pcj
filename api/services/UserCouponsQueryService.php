@@ -1,13 +1,11 @@
 <?php
 namespace api\services;
-use backend\models\Goods;
-use backend\models\GoodsSpec;
-use backend\models\IntGoodsCategory;
-use common\components\Helper;
+use backend\models\UserCoupons;
+
 use Yii;
 use yii\db\ActiveQuery;
 
-class Goods2QueryService
+class UserCouponsQueryService
 {
     /**
      * 构建订单查询
@@ -16,16 +14,9 @@ class Goods2QueryService
      */
     public static function buildQuery($params = [])
     {
-        $query = Goods::find()->where(['type'=>2,'status'=>1]);
-        if(isset($params['keywords'])){
-            $query->andWhere(['like', 'title', $params['keywords']]);
-        }
-        if(isset($params['category_id'])){
-            $category=IntGoodsCategory::findOne($params['category_id']);
-            if($category){
-                $query->andWhere(['>=','price',$category->min])
-                ->andWhere(['<=','price',$category->max]);
-            }
+        $query = UserCoupons::find()->where(['user_id'=>$params['user_id']]);
+        if(isset($params['status'])){
+            $query->andWhere(['status' => $params['status']]);
         }
 
         return $query;
@@ -83,16 +74,17 @@ class Goods2QueryService
         foreach ($models as $k=>$v){
 
             $data_goods[]=[
-                'goods_id'=>$v->id,
-                'title'=>$v->title,
-                'price'=>$v->price,
-                'sales'=>$v->sales,
-                'crossed_price'=>$v->crossed_price,
-                'image'=>Helper::setImg($v['thumb']),
+                'coupons_id'=>$v->id,
+                'min_money'=>$v->min_money,
+                'money'=>$v->money,
+                'type'=>$v->type,
+                'status'=>$v->status,
+                'start_time'=>date('Y-m-d H:i:s',$v->start_time),
+                'end_time'=>date('Y-m-d H:i:s',$v->end_time),
             ];
         }
         return [
-            'goods' => $data_goods,
+            'model' => $data_goods,
             'pagination' => [
                 'total_count' => $totalCount,
                 'total_page' => $totalPage,
@@ -103,28 +95,4 @@ class Goods2QueryService
     }
 
 
-    //获取单条数据
-    public static function get_one($id)
-    {
-
-        $goods=Goods::findOne($id);
-        if($goods->has_option==1){
-            $sku=$goods->getSpecData();
-        }else{
-            $sku=[];
-        }
-        $detail = [
-            'goods_id' => $goods->id,
-            'title'=>$goods->title,
-            'price'=>$goods->price,
-            'sales'=>$goods->sales,
-            'image'=>Helper::setImg($goods['thumb']),
-            'has_option'=>$goods->has_option,
-            'sku'=>$sku
-
-
-        ];
-        return $detail;
-
-    }
 }
