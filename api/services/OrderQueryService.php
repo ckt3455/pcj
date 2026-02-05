@@ -91,7 +91,6 @@ class OrderQueryService
             ->offset($offset)
             ->limit($pageSize)
             ->all();
-        $data_order=[];
         $data=[];
         foreach ($models as $k=>$v){
 
@@ -106,6 +105,7 @@ class OrderQueryService
                     'price'=>$v1['price'],
                 ];
             }
+            $end_time=0;
             if($v->status==1){
                 $end_time=$v->created_at+15*60-time();
                 if($end_time<0){
@@ -138,70 +138,52 @@ class OrderQueryService
     //获取单条数据
     public static function get_one($id)
     {
-        $order = ServiceOrder::findOne($id);
-        $goods=UserGoods::findOne($order->goods_id);
-        $end_days = $goods->end_days;
-        $image=[];
-        if($order->image){
-            $arr_image=explode(',',$order->image);
-            foreach ($arr_image as $k=>$v){
-                $image[]=Helper::setImg($v);
-            }
-        }
-        $worker=[];
-        if($order->worker_id>0){
-            $worker=[
-                'worker_name'=>$order->worker_name,
-                'worker_image'=>Helper::setImg($order->worker_image),
-                'worker_phone'=>$order->worker_phone,
-                'worker_time'=>date('Y-m-d H:i',$order->worker_time),
-
+        $order = Order::findOne($id);
+        $goods=[];
+        foreach ($order->detail as $k1=>$v1){
+            $goods[]=[
+                'title'=>$v1['title'],
+                'image'=>Helper::setImg($v1['image']),
+                'goods_id'=>$v1['goods_id'],
+                'sku_value'=>$v1['sku_value'],
+                'number'=>$v1['number'],
+                'price'=>$v1['price'],
             ];
         }
-        if($order->status==3 and $order->is_evaluate==1){
-            $is_evaluate=1;
-        }else{
-            $is_evaluate=0;
-        }
-        $jx_message=[];
-        $hj_message=[];
-
-        if($order->wx_type==2 and $order->status==1){
-            $is_jx=1;
-        }else{
-            $is_jx=0;
+        $end_time=0;
+        if($order->status==1){
+            $end_time=$order->created_at+15*60-time();
+            if($end_time<0){
+                $end_time=0;
+            }
         }
         $detail = [
-            'service_order_id' => $order->id,
+            'order_id' => $order->id,
             'type'=>$order->type,
-            'title' => $order->title,
             'order_number' => $order->order_number,
-            'date' => date('Y/m/d',$order->date),
             'create_time'=>date('Y-m-d H:i',$order->created_at),
             'status' => $order->status,
-            'time' => $order->time,
-            'status_message'=>ServiceOrder::$status_message[$order->status],
-            'contact'=>$order->contact,
+            'status_message'=>Order::$status[$order->status],
+            'contact'=>$order->consignee,
             'phone'=>$order->phone,
-            'goods_name'=>$order->goods_name,
-            'goods_code'=>$order->goods_code,
-            'goods_image'=>Helper::setImg($order->goods_image),
-            'end_days'=>$end_days,
-            'image'=>$image,
             'content'=>$order->content,
-            'detail'=>$order->detail,
-            'wx_type'=>$order->wx_type,
-            'is_evaluate'=>$is_evaluate,
-            'worker'=>$worker,
-            'sz_order_number'=>$order->sz_order_number,
-            'jx_express'=>$order->jx_express,
-            'jx_express_number'=>$order->jx_express_number,
-            'jx_express_image'=>Helper::setImg($order->jx_express_image),
-            'hj_express'=>$order->hj_express,
-            'hj_express_number'=>$order->hj_express_number,
-            'jx_message'=>$jx_message,
-            'hj_message'=>$hj_message,
-            'is_jx'=>$is_jx
+            'goods'=>$goods,
+            'province'=>$order->province,
+            'city'=>$order->city,
+            'area'=>$order->area,
+            'address'=>$order->address_detail,
+            'freight'=>$order->freight,
+            'pay_price'=>$order->pay_price,
+            'total_price'=>$order->total_price,
+            'yh_money'=>$order->yh_money,
+            'integral'=>$order->integral,
+            'pay_time'=>$order->paid_time>0?date('Y-m-d H:i:s',$order->paid_time):'',
+            'delivery_time'=>$order->delivery_time>0?date('Y-m-d H:i:s',$order->delivery_time):'',
+            'confirm_time'=>$order->confirm_time>0?date('Y-m-d H:i:s',$order->confirm_time):'',
+            'pay_method'=>$order->pay_method,
+            'pay_method_message'=>Order::$pay_method[$order->pay_method],
+            'end_time'=>$end_time,
+
 
 
 

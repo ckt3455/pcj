@@ -3,26 +3,19 @@
 namespace api\controllers;
 
 use api\extensions\ApiBaseController;
+use api\services\GoodsQueryService;
 use backend\models\Code;
+use backend\models\Goods;
 use backend\models\Icon;
 use backend\models\Message;
-use backend\models\Order;
-use backend\models\OrderDetail;
-use backend\models\ServiceOrder;
 use backend\models\TestLog;
 use backend\models\UserGoods;
-use backend\models\Worker;
-use common\components\File;
 use common\components\Helper;
-use common\components\SzApi;
-use common\components\WdtClient;
-use Detail;
 use Yii;
 use yii\helpers\Json;
 use yii\helpers\Url;
-use yii\web\Response;
 use yii\web\UploadedFile;
-use function AlibabaCloud\Client\json;
+
 
 /**
  * DefaultController controller
@@ -31,31 +24,21 @@ class IndexController extends ApiBaseController
 {
 
 
+
     /**
      * 首页
      * **/
     public function actionIndex()
     {
+
         $data = [
             'banner' => [],
-            'banner2' => [],
             'icon' => [],
-            'goods' => [],
         ];
         $banner = Icon::getList(['type' => 1]);
-        $banner2 = Icon::getList(['type' => 2]);
         $icon = Icon::getList(['type' => 3]);
         foreach ($banner as $k => $v) {
             $data['banner'][] = [
-                'image' => $this->setImg($v['image']),
-                'href' => $v['href'],
-                'category' => $v['category'],
-                'appid' => $v['appid'],
-            ];
-        }
-
-        foreach ($banner2 as $k => $v) {
-            $data['banner2'][] = [
                 'image' => $this->setImg($v['image']),
                 'href' => $v['href'],
                 'category' => $v['category'],
@@ -72,22 +55,16 @@ class IndexController extends ApiBaseController
                 'appid' => $v['appid'],
             ];
         }
-        $user_id = Yii::$app->request->post('user_id');
-        if ($user_id) {
-            $goods = UserGoods::find()->where(['user_id' => $user_id, 'is_index' => 1])->orderBy('id desc')->limit(5)->all();
-            foreach ($goods as $k => $v) {
-                $data['goods'][] = [
-                    'goods_id' => $v->id,
-                    'goods_name' => $v->goods_name,
-                    'goods_code' => $v->goods_code,
-                    'end_days' => $v->end_days,
-                    'lx_end_days' => $v->lx_end_days,
-                    'lx_alert' => $v->lx_alert,
-                    'goods_image' => $this->setImg($v->goods_image),
-                    'lx_status' => $v->lx_status,
-                ];
-            }
-        }
+
+
+        $params=[
+            'hot'=>1,//首页推荐
+            'page'=>Yii::$app->request->post('page', 1),
+            'page_number'=>Yii::$app->request->post('page_number', 10),
+        ];
+        $goods = GoodsQueryService::searchModel($params);
+        $data['goods']=$goods;
+
 
         return $this->jsonSuccess($data);
     }

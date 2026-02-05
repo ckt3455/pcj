@@ -7,21 +7,32 @@ use Yii;
 /**
  * This is the model class for table "{{%order_refund}}".
  *
- * @property string $id
- * @property string $user_id
- * @property string $order_number
- * @property string $contact
- * @property string $mobile
- * @property string $type
- * @property string $message
- * @property string $content
- * @property string $created_at
- * @property string $detail_id
+ * @property int $id
+ * @property int|null $order_id
+ * @property int|null $user_id
+ * @property int|null $type
+ * @property int|null $status
+ * @property int|null $goods_status
+ * @property int|null $reason
+ * @property float|null $money
+ * @property string|null $content
+ * @property string|null $image
+ * @property string|null $express_name
+ * @property string|null $express_number
+ * @property int|null $created_at
+ * @property int|null $updated_at
+ * @property int|null $detail_id
+ * @property string|null $message
+ * @property string|null $order_number
+ * @property string|null $contact
+ * @property string|null $mobile
  */
 class OrderRefund extends \yii\db\ActiveRecord
 {
+
+
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function tableName()
     {
@@ -29,63 +40,49 @@ class OrderRefund extends \yii\db\ActiveRecord
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['user_id', 'type', 'created_at','status'], 'integer'],
-            [['order_number', 'message', 'content', 'detail_id'], 'string', 'max' => 255],
+            [['content', 'image', 'express_name', 'express_number', 'message', 'order_number', 'contact', 'mobile'], 'default', 'value' => null],
+            [['detail_id'], 'default', 'value' => 0],
+            [['reason'], 'default', 'value' => 1],
+            [['money'], 'default', 'value' => 0.00],
+            [['order_id', 'user_id', 'type', 'status', 'goods_status', 'reason', 'created_at', 'updated_at', 'detail_id'], 'integer'],
+            [['money'], 'number'],
+            [['content', 'image'], 'string', 'max' => 1000],
+            [['express_name', 'express_number', 'message', 'order_number'], 'string', 'max' => 255],
             [['contact', 'mobile'], 'string', 'max' => 50],
         ];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function attributeLabels()
     {
         return [
             'id' => 'ID',
+            'order_id' => '订单id',
             'user_id' => '用户',
-            'order_number' => '订单号',
+            'type' => '类型',
+            'status' => '状态',
+            'goods_status' => '收货状态',
+            'reason' => '理由',
+            'money' => '金额',
+            'content' => '内容',
+            'image' => '图片',
+            'express_name' => '快递名称',
+            'express_number' => '快递单号',
+            'created_at' => '添加时间',
+            'updated_at' => 'Updated At',
+            'detail_id' => 'Detail ID',
+            'message' => '备注',
+            'order_number' => '订单编号',
             'contact' => '联系人',
             'mobile' => '电话',
-            'type' => '类型',
-            'message' => '内容',
-            'content' => '备注',
-            'created_at' => '添加时间',
-            'detail_id' => '产品',
-            'image'=>'图片',
-            'status'=>'状态',
-            'money'=>'金额'
         ];
     }
 
-    public static $status_message=[
-        1=>'待审核',
-        2=>'售后中',
-        3=>'已完成',
-        -1=>'已取消',
-        -2=>'已驳回',
-        -3=>'已作废'
-    ];
-
-    public static $type_message=[
-        1=>'退款退货',
-        2=>'退款',
-    ];
-
-
-    public function getOrder(){
-        return $this->hasOne(Order::className(),['order_number'=>'order_number']);
-    }
-
-    public function getDetail(){
-      return $this->hasMany(OrderDetail::className(),['refund_id'=>'id']);
-    }
-
-    public function getUser(){
-        return $this->hasOne(ProvinceUser::className(),['id'=>'user_id']);
-    }
 }

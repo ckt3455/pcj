@@ -24,8 +24,6 @@ use yii\db\ActiveRecord;
  */
 class Buyer extends \yii\db\ActiveRecord
 {
-
-
     /**
      * {@inheritdoc}
      */
@@ -41,7 +39,6 @@ class Buyer extends \yii\db\ActiveRecord
     {
         return [
             [['code', 'province', 'city', 'area'], 'default', 'value' => null],
-            [['updated_at'], 'default', 'value' => 0],
             [['money'], 'default', 'value' => 0.00],
             [['user_id', 'level_id', 'created_at', 'updated_at'], 'integer'],
             [['goods_money', 'money'], 'number'],
@@ -51,7 +48,9 @@ class Buyer extends \yii\db\ActiveRecord
         ];
     }
 
-
+    /**
+     * {@inheritdoc}
+     */
     public function behaviors()
     {
         return [
@@ -61,6 +60,7 @@ class Buyer extends \yii\db\ActiveRecord
                     ActiveRecord::EVENT_BEFORE_INSERT => ['created_at', 'updated_at'],
                     ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_at'],
                 ],
+                // 移除 updated_at 默认值设置，避免与行为冲突
             ],
         ];
     }
@@ -74,7 +74,7 @@ class Buyer extends \yii\db\ActiveRecord
             'id' => 'ID',
             'user_id' => '用户',
             'level_id' => '等级',
-            'title'=>'供货商名称',
+            'title' => '供货商名称', // 保持一致性
             'goods_money' => '货款',
             'money' => '余额',
             'code' => 'Code',
@@ -82,8 +82,34 @@ class Buyer extends \yii\db\ActiveRecord
             'city' => '市',
             'area' => '区',
             'created_at' => '添加时间',
-            'updated_at' => 'Updated At',
+            'updated_at' => '更新时间', // 更直观的标签
         ];
     }
 
+    /**
+     * 获取关联的等级信息
+     * @return \yii\db\ActiveQuery
+     */
+    public function getLevel()
+    {
+        return $this->hasOne(BuyerLevel::className(), ['id' => 'level_id']);
+    }
+
+    /**
+     * 获取工人数量
+     * @return int
+     */
+    public function getWorkerCount()
+    {
+        // 确保 id 合法性，并缓存查询结果以提升性能
+        if (!isset($this->_workerCount)) {
+            $this->_workerCount = (int) BuyerWorker::find()
+                ->where(['buyer_id' => $this->id])
+                ->count();
+        }
+        return $this->_workerCount;
+    }
+
+    // 缓存变量
+    private $_workerCount;
 }

@@ -34,7 +34,7 @@ class User extends \yii\db\ActiveRecord
 
 
     const JWT_ALGORITHM = 'RS256';
-    const JWT_EXPIRE_TIME = 7200; // 2小时
+    const JWT_EXPIRE_TIME = 6*3600; // 6小时
 
     /**
      * @inheritdoc

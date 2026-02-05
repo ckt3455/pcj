@@ -82,8 +82,6 @@ class UserController extends ApiBaseController
             'mobile'=>$user['mobile'],
             'image'=>$this->setImg($user['image']),
             'message_count'=>UserMessage::find()->where(['user_id'=>$user_id,'is_read'=>0])->count(),
-            'service_order1'=>ServiceOrder::find()->where(['user_id'=>$user_id,'status'=>1])->count(),
-            'service_order2'=>ServiceOrder::find()->where(['user_id'=>$user_id,'status'=>2])->count(),
         ];
 
 

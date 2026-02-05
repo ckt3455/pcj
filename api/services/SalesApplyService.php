@@ -1,12 +1,9 @@
 <?php
 namespace api\services;
-use backend\models\Goods;
-use backend\models\GoodsSpec;
-use common\components\Helper;
+use backend\models\SalesApply;
 use Yii;
-use yii\db\ActiveQuery;
 
-class GoodsQueryService
+class SalesApplyService
 {
     /**
      * 构建订单查询
@@ -15,15 +12,14 @@ class GoodsQueryService
      */
     public static function buildQuery($params = [])
     {
-        $query = Goods::find()->where(['type'=>1,'status'=>1]);
-        if(isset($params['category_id'])){
-            $query->andWhere(['category_id' => $params['category_id']]);
-        }
-        if(isset($params['keywords'])){
-            $query->andWhere(['like', 'title', $params['keywords']]);
-        }
-        if(isset($params['hot'])){
-            $query->andWhere(['like', 'hot', $params['hot']]);
+        $query = SalesApply::find()->where(['sales_id'=>$params['sales_id']]);
+        if(isset($params['time'])){
+
+            $start=strtotime($params['time'].'-01');
+
+            $end=strtotime(date('Y-m-01',$start+31*24*3600));
+
+            $query->andWhere(['>=','created_at',$start])->andWhere(['<=','created_at',$end]);
         }
 
         return $query;
@@ -77,20 +73,20 @@ class GoodsQueryService
             ->offset($offset)
             ->limit($pageSize)
             ->all();
-        $data_goods=[];
+        $data=[];
         foreach ($models as $k=>$v){
 
-            $data_goods[]=[
-                'goods_id'=>$v->id,
-                'title'=>$v->title,
-                'price'=>$v->price,
-                'sales'=>$v->sales,
-                'crossed_price'=>$v->crossed_price,
-                'image'=>Helper::setImg($v['thumb']),
+            $data[]=[
+                'payment'=>$v->payment,
+                'payment_message'=>SalesApply::$payment_message[$v->payment],
+                'money'=>$v->money,
+                'time'=>date('Y-m-d H:i:s',$v->created_at),
+                'status'=>$v->status,
+                'status_message'=>SalesApply::$status_message[$v->status],
             ];
         }
         return [
-            'goods' => $data_goods,
+            'data' => $data,
             'pagination' => [
                 'total_count' => $totalCount,
                 'total_page' => $totalPage,
@@ -98,32 +94,5 @@ class GoodsQueryService
                 'page_size' => $pageSize
             ]
         ];
-    }
-
-
-    //获取单条数据
-    public static function get_one($id)
-    {
-
-        $goods=Goods::findOne($id);
-        if($goods->has_option==1){
-            $sku=$goods->getSpecData();
-        }else{
-            $sku=[];
-        }
-        $detail = [
-            'goods_id' => $goods->id,
-            'title'=>$goods->title,
-            'price'=>$goods->price,
-            'crossed_price'=>$goods->crossed_price,
-            'sales'=>$goods->sales,
-            'image'=>Helper::setImg($goods['thumb']),
-            'has_option'=>$goods->has_option,
-            'sku'=>$sku
-
-
-        ];
-        return $detail;
-
     }
 }

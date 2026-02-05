@@ -24,7 +24,9 @@ class ApiBaseController extends Controller {
         // 验证签名
         $controller = $action->controller->id;
         $actionName = $action->id;
-
+        if (!$this->validateSign()) {
+            throw new \yii\web\BadRequestHttpException('签名错误');
+        }
 //        if($controller!='index' or $actionName!='up-image'){
 //            if (!$this->validateSign()) {
 //                throw new \yii\web\BadRequestHttpException('签名错误');
@@ -57,6 +59,7 @@ class ApiBaseController extends Controller {
 
     //拼接域名
     protected function setImg($img,$hostInfo=null){
+
         if(stripos($img,'http') !== 0 && !empty($img)) {
             $hostInfo = empty($hostInfo)?Yii::$app->request->hostInfo:$hostInfo;
             $img = $hostInfo . $img;
