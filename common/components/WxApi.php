@@ -259,7 +259,7 @@ class WxApi
 
     }
 
-    static public function curl($param = '', $url, $type = 1)
+    static public function curl($param = '', $url='', $type = 1)
     {
 
         $postUrl = $url;
