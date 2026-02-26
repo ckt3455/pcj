@@ -80,6 +80,11 @@ class GoodsQueryService
         $data_goods=[];
         foreach ($models as $k=>$v){
 
+            if($v->has_option==1){
+                $sku=$v->getSpecData();
+            }else{
+                $sku=[];
+            }
             $data_goods[]=[
                 'goods_id'=>$v->id,
                 'title'=>$v->title,
@@ -87,6 +92,8 @@ class GoodsQueryService
                 'sales'=>$v->sales,
                 'crossed_price'=>$v->crossed_price,
                 'image'=>Helper::setImg($v['thumb']),
+                'has_option'=>$v->has_option,
+                'sku'=>$sku,
             ];
         }
         return [
