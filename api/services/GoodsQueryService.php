@@ -126,6 +126,7 @@ class GoodsQueryService
             'service_message'=>'支持7天无理由退货',
             'active_message'=>'暂无活动',
             'content'=>Helper::imageUrl($goods->content,Yii::$app->request->hostInfo),
+            'is_collect'=>0,
 
 
         ];

@@ -15,6 +15,7 @@ use backend\models\IntGoodsCategory;
 use backend\models\SetImage;
 use backend\models\User;
 use backend\models\UserCart;
+use backend\models\UserCollect;
 use backend\models\UserGoods;
 use common\components\Helper;
 use Yii;
@@ -113,6 +114,16 @@ class GoodsController extends ApiBaseController
             return $this->jsonError($validate);
         }
         $data['detail'] =GoodsQueryService::get_one($params['goods_id']);
+        $token=Yii::$app->request->post('token');
+        if($token){
+            $user_message=User::decrypt($token);
+            if(isset($user_message['user_id'])){
+                $collect=UserCollect::find()->where(['user_id'=>$user_message['user_id'],'goods_id'=>$params['goods_id']])->limit(1)->one();
+                if($collect){
+                    $data['detail']['is_collect']=1;
+                }
+            }
+        }
         return $this->jsonSuccess($data);
     }
 
@@ -231,6 +242,47 @@ class GoodsController extends ApiBaseController
         return $this->jsonSuccess($data);
 
     }
+
+
+
+    public function actionCollect()
+    {
+        $params = Yii::$app->request->post();
+        $customRules = [
+            [['goods_id'], 'required', 'message' => 'id不能为空'],
+        ];
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $params['user_id']=$user_message['user_id'];
+
+        $old=UserCollect::find()->where(['goods_id'=>$params,'user_id'=>$user_message['user_id']])->limit(1)->one();
+        if($old){
+            $old->delete();
+            $data = [
+                'message'=>'取消收藏成功',
+                'collect'=>0,
+            ];
+        }else{
+            $new=new UserCollect();
+            $new->goods_id=$params['goods_id'];
+            $new->user_id=$user_message['user_id'];
+            $new->time=time();
+            $new->save();
+            $data = [
+                'message'=>'收藏成功',
+                'collect'=>1,
+            ];
+        }
+
+        return $this->jsonSuccess($data);
+    }
+
+
+
 
 
 
