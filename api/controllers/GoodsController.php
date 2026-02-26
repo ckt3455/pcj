@@ -183,6 +183,10 @@ class GoodsController extends ApiBaseController
         $params['user_id']=$user_message['user_id'];
 
         $goods=Goods::findOne($params['goods_id']);
+        $number=$params['number']?:1;
+        if($number<1){
+            $number=1;
+        }
 
         if($goods->has_option==1){
             if(!$params['sku_value']){
@@ -195,7 +199,7 @@ class GoodsController extends ApiBaseController
                     $old=UserCart::find()->where(['goods_id'=>$params,'user_id'=>$user_message['user_id'],'sku_id'=>$sku->id])->limit(1)->one();
                     if($old){
                         $old->created_at=time();
-                        $old->number++;
+                        $old->number+=$number;
                         if(!$old->save()){
                             $error=$old->getFirstErrors();
                             return $this->jsonError(reset($error));
@@ -203,7 +207,7 @@ class GoodsController extends ApiBaseController
                     }else{
                         $new=new UserCart();
                         $new->goods_id=$params['goods_id'];
-                        $new->number=1;
+                        $new->number=$number;
                         $new->user_id=$params['user_id'];
                         $new->created_at=time();
                         $new->sku_id=$sku->id;
@@ -219,7 +223,7 @@ class GoodsController extends ApiBaseController
             $old=UserCart::find()->where(['goods_id'=>$params,'user_id'=>$user_message['user_id']])->limit(1)->one();
             if($old){
                 $old->created_at=time();
-                $old->number++;
+                $old->number+=$number;
                 if(!$old->save()){
                     $error=$old->getFirstErrors();
                     return $this->jsonError(reset($error));
@@ -227,7 +231,7 @@ class GoodsController extends ApiBaseController
             }else{
                 $new=new UserCart();
                 $new->goods_id=$params['goods_id'];
-                $new->number=1;
+                $new->number=$number;
                 $new->user_id=$params['user_id'];
                 $new->created_at=time();
                 if(!$new->save()){

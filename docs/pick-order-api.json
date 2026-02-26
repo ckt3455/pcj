@@ -1,0 +1,517 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "提货申请 API",
+    "version": "1.0.0",
+    "description": "小程序提货申请功能接口文档"
+  },
+  "servers": [
+    {
+      "url": "http://your-domain.com/api",
+      "description": "小程序接口服务器"
+    },
+    {
+      "url": "http://your-domain.com/backend",
+      "description": "后台管理服务器"
+    }
+  ],
+  "tags": [
+    {
+      "name": "小程序 - 提货申请",
+      "description": "小程序端提货申请接口"
+    },
+    {
+      "name": "后台 - 提货订单管理",
+      "description": "后台管理端接口"
+    }
+  ],
+  "paths": {
+    "/pick-order/create": {
+      "post": {
+        "tags": ["小程序 - 提货申请"],
+        "summary": "创建提货订单",
+        "description": "用户提交提货申请",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "address_id", "items"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "用户登录 token",
+                    "example": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+                  },
+                  "address_id": {
+                    "type": "integer",
+                    "description": "地址 ID",
+                    "example": 1
+                  },
+                  "items": {
+                    "type": "object",
+                    "description": "商品列表 {商品 ID: 数量}",
+                    "example": {"1": 2, "3": 1}
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "备注信息",
+                    "example": "请尽快发货"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {"type": "integer", "example": 0},
+                    "message": {"type": "string", "example": "提货申请提交成功"},
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "pick_order_id": {"type": "integer", "example": 123}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pick-order/list": {
+      "post": {
+        "tags": ["小程序 - 提货申请"],
+        "summary": "提货订单列表",
+        "description": "分页获取当前用户的提货订单列表",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "用户登录 token",
+                    "example": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+                  },
+                  "page": {
+                    "type": "integer",
+                    "description": "页码",
+                    "default": 1,
+                    "example": 1
+                  },
+                  "page_size": {
+                    "type": "integer",
+                    "description": "每页数量",
+                    "default": 20,
+                    "example": 20
+                  },
+                  "status": {
+                    "type": "integer",
+                    "description": "状态筛选：1=待审核 2=待提货 3=已提货 4=已取消",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {"type": "integer", "example": 0},
+                    "message": {"type": "string", "example": "请求成功"},
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {"type": "integer", "example": 123},
+                              "pick_number": {"type": "string", "example": "P202602261200001234"},
+                              "consignee": {"type": "string", "example": "张三"},
+                              "phone": {"type": "string", "example": "13800138000"},
+                              "address": {"type": "string", "example": "广东省深圳市南山区详细地址"},
+                              "total_amount": {"type": "string", "example": "199.00"},
+                              "status": {"type": "integer", "example": 1},
+                              "status_text": {"type": "string", "example": "待审核"},
+                              "created_at": {"type": "string", "example": "2026-02-26 12:00:00"}
+                            }
+                          }
+                        },
+                        "total": {"type": "integer", "example": 100},
+                        "page": {"type": "integer", "example": 1},
+                        "page_size": {"type": "integer", "example": 20}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pick-order/detail": {
+      "post": {
+        "tags": ["小程序 - 提货申请"],
+        "summary": "提货订单详情",
+        "description": "获取单个提货订单的详细信息",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "id"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "用户登录 token",
+                    "example": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+                  },
+                  "id": {
+                    "type": "integer",
+                    "description": "订单 ID",
+                    "example": 123
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickOrderDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pick-order/cancel": {
+      "post": {
+        "tags": ["小程序 - 提货申请"],
+        "summary": "取消提货订单",
+        "description": "取消提货订单（仅限待审核和待提货状态）",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "id"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+                  },
+                  "id": {
+                    "type": "integer",
+                    "example": 123
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {"type": "integer", "example": 0},
+                    "message": {"type": "string", "example": "取消成功"},
+                    "data": {"type": "array"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pick-order/goods-list": {
+      "post": {
+        "tags": ["小程序 - 提货申请"],
+        "summary": "获取可提货商品列表",
+        "description": "获取已上架的商品列表",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {"type": "integer", "example": 0},
+                    "message": {"type": "string", "example": "请求成功"},
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {"type": "integer"},
+                              "title": {"type": "string"},
+                              "price": {"type": "string"},
+                              "thumb": {"type": "string"},
+                              "stock": {"type": "integer"},
+                              "has_option": {"type": "integer"}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pick-order/address-list": {
+      "post": {
+        "tags": ["小程序 - 提货申请"],
+        "summary": "获取用户地址列表",
+        "description": "获取当前用户的收货地址列表",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {"type": "integer", "example": 0},
+                    "message": {"type": "string", "example": "请求成功"},
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {"type": "integer"},
+                              "province": {"type": "string"},
+                              "city": {"type": "string"},
+                              "area": {"type": "string"},
+                              "content": {"type": "string"},
+                              "user": {"type": "string"},
+                              "phone": {"type": "string"},
+                              "is_default": {"type": "integer"},
+                              "full_address": {"type": "string", "example": "广东省深圳市南山区科技园南区"}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pick-order/api-audit": {
+      "post": {
+        "tags": ["后台 - 提货订单管理"],
+        "summary": "审核提货订单",
+        "description": "管理员审核提货订单",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id", "status"],
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "description": "订单 ID",
+                    "example": 123
+                  },
+                  "status": {
+                    "type": "integer",
+                    "description": "2=通过 (待提货) 4=拒绝 (已取消)",
+                    "example": 2
+                  },
+                  "audit_user_id": {
+                    "type": "integer",
+                    "description": "审核人 ID",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "integer", "example": 0},
+                    "message": {"type": "string", "example": "审核成功"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pick-order/api-confirm-pick": {
+      "post": {
+        "tags": ["后台 - 提货订单管理"],
+        "summary": "确认提货",
+        "description": "确认用户已完成提货",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 123
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {"type": "integer", "example": 0},
+                    "message": {"type": "string", "example": "提货成功"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PickOrderDetail": {
+        "type": "object",
+        "properties": {
+          "code": {"type": "integer", "example": 0},
+          "message": {"type": "string", "example": "请求成功"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "integer", "example": 123},
+              "pick_number": {"type": "string", "example": "P202602261200001234"},
+              "consignee": {"type": "string", "example": "张三"},
+              "phone": {"type": "string", "example": "13800138000"},
+              "province": {"type": "string", "example": "广东省"},
+              "city": {"type": "string", "example": "深圳市"},
+              "area": {"type": "string", "example": "南山区"},
+              "address_detail": {"type": "string", "example": "科技园南区"},
+              "total_amount": {"type": "string", "example": "199.00"},
+              "status": {"type": "integer", "example": 1},
+              "status_text": {"type": "string", "example": "待审核"},
+              "content": {"type": "string", "example": "请尽快发货"},
+              "created_at": {"type": "string", "example": "2026-02-26 12:00:00"},
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "goods_id": {"type": "integer"},
+                    "goods_name": {"type": "string"},
+                    "goods_image": {"type": "string"},
+                    "quantity": {"type": "integer"},
+                    "price": {"type": "string"},
+                    "subtotal": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
