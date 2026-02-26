@@ -24,15 +24,15 @@ class ApiBaseController extends Controller {
         // 验证签名
         $controller = $action->controller->id;
         $actionName = $action->id;
-        if (!$this->validateSign()) {
-            throw new \yii\web\BadRequestHttpException('签名错误');
-        }
-//        if($controller!='index' or $actionName!='up-image'){
-//            if (!$this->validateSign()) {
-//                throw new \yii\web\BadRequestHttpException('签名错误');
-//            }
-//
+//        if (!$this->validateSign()) {
+//            throw new \yii\web\BadRequestHttpException('签名错误');
 //        }
+        if($actionName!='up-image'){
+            if (!$this->validateSign()) {
+                throw new \yii\web\BadRequestHttpException('签名错误');
+            }
+
+        }
 
         if (!$this->validateToken()) {
             throw new \yii\web\BadRequestHttpException('token无效');
@@ -181,9 +181,9 @@ class ApiBaseController extends Controller {
         $extendedRules = [
             'user_id' => [
                 [
-                    ['user_id'], 'exist', 'targetClass' => User::class, 'targetAttribute' => 'id', 'message' => '用户ID不存在'],
-                    [['user_id'], 'integer', 'min' => 1, 'message' => '用户ID必须为正整数'],
-                ],
+                ['user_id'], 'exist', 'targetClass' => User::class, 'targetAttribute' => 'id', 'message' => '用户ID不存在'],
+                [['user_id'], 'integer', 'min' => 1, 'message' => '用户ID必须为正整数'],
+            ],
 
             're_password' => [
                 [['password'], 'compare','compareAttribute' => 're_password', 'message' => '两次输入的密码不一致！']
@@ -223,16 +223,16 @@ class ApiBaseController extends Controller {
      * @param  array $params 参数
      * @param  array $rules 规则
      * **/
-   protected function validateParams($params, $rules) {
+    protected function validateParams($params, $rules) {
 
 
 
-       foreach ($rules as $k=>$v){
+        foreach ($rules as $k=>$v){
 
-           if(!isset($params[$v[0][0]])){
-               return $v[0][0].'未定义';
-           }
-       }
+            if(!isset($params[$v[0][0]])){
+                return $v[0][0].'未定义';
+            }
+        }
 
         $model = DynamicModel::validateData($params, $rules);
         if($model->hasErrors()){

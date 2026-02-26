@@ -73,10 +73,18 @@ class LoginController extends ApiBaseController
         }
         $user=User::find()->where(['mobile' => $params['mobile']])->limit(1)->one();
         if(!$user){
-            return $this->jsonError('用户不存在');
+                $new = new User();
+                $new->mobile = $params['mobile'];
+                $new->name='新用户';
+                if(!$new->save()){
+                    $errors=$new->getErrors();
+                    return $this->jsonError(reset($errors));
+                }
+                $data['token'] =$new->loginToken;
+        }else{
+            $data['token'] = $user->loginToken;
         }
 
-        $data['token'] = $user->loginToken;
         return $this->jsonSuccess($data);
 
     }

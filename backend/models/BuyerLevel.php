@@ -56,4 +56,11 @@ class BuyerLevel extends \yii\db\ActiveRecord
         ];
     }
 
+    public static function level_name($id)
+    {
+        $level = self::findOne($id);
+        return $level['title'];
+
+    }
+
 }

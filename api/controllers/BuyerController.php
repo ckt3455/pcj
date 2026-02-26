@@ -3,12 +3,12 @@
 namespace api\controllers;
 
 use api\extensions\ApiBaseController;
+use api\services\BuyerLevelService;
+use api\services\BuyerService;
 use api\services\SalesApplyService;
 use api\services\SalesMoneyLogService;
-use api\services\SalesService;
 use backend\models\Buyer;
 use backend\models\BuyerApply;
-use backend\models\Sales;
 use backend\models\User;
 use common\components\Helper;
 use Yii;
@@ -204,7 +204,7 @@ class BuyerController extends ApiBaseController
     {
         $params = Yii::$app->request->post();
         $customRules = [
-            [['sales_id'], 'required', 'message' => 'id不能为空'],
+            [['buyer_id'], 'required', 'message' => 'id不能为空'],
         ];
         $rules = $this->getRules(['token'],$customRules);
         $user_message=User::decrypt($params['token']);
@@ -242,7 +242,7 @@ class BuyerController extends ApiBaseController
     {
         $params = Yii::$app->request->post();
         $customRules = [
-            [['sales_id'], 'required', 'message' => 'id不能为空'],
+            [['buyer_id'], 'required', 'message' => 'id不能为空'],
         ];
         $rules = $this->getRules(['token'],$customRules);
         $user_message=User::decrypt($params['token']);
@@ -251,10 +251,67 @@ class BuyerController extends ApiBaseController
             return $this->jsonError($validate);
         }
         $params['user_id']=$user_message['user_id'];
-        $data = SalesService::searchModel($params);
+        $data = BuyerService::searchModel($params);
         return $this->jsonSuccess($data);
 
     }
+
+
+    public function actionLevelList()
+    {
+        $params = Yii::$app->request->post();
+        $customRules = [
+            [['buyer_id'], 'required', 'message' => 'id不能为空'],
+        ];
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $buyer=Buyer::findOne($params['buyer_id']);
+        $buyer_message=[
+            'now_level_id'=>$buyer['level_id'],
+            'now_level_message'=>$buyer->level['title'],
+        ];
+        $params['user_id']=$user_message['user_id'];
+        $data=[
+            'buyer_message'=>$buyer_message,
+            'level_message'=>BuyerLevelService::searchModel($params),
+        ];
+        return $this->jsonSuccess($data);
+
+    }
+
+    public function actionLevelDetail()
+    {
+        $params = Yii::$app->request->post();
+        $customRules = [
+            [['buyer_id'], 'required', 'message' => 'id不能为空'],
+            [['level_id'], 'required', 'message' => 'id不能为空'],
+        ];
+        $rules = $this->getRules(['token'],$customRules);
+        $user_message=User::decrypt($params['token']);
+        $validate = $this->validateParams($params, $rules);
+        if ($validate) {
+            return $this->jsonError($validate);
+        }
+        $buyer=Buyer::findOne($params['buyer_id']);
+        $buyer_message=[
+            'now_level_id'=>$buyer['level_id'],
+            'now_level_message'=>$buyer->level['title'],
+        ];
+        $params['user_id']=$user_message['user_id'];
+        $data=[
+            'buyer_message'=>$buyer_message,
+            'level_message'=>BuyerLevelService::getOne($params['level_id']),
+        ];
+        return $this->jsonSuccess($data);
+
+    }
+
+
+
 
 
 

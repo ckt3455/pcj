@@ -62,7 +62,7 @@ class Image extends InputWidget
         $_options = [
             'multiple'   => true,
             'mimeTypes'  => 'image/*',
-            'extensions' => 'gif,jpg,jpeg,bmp,png,webp',
+            'extensions' => 'gif,jpg,jpeg,bmp,png,webp,svg',
         ];
 
         $_pluginOptions = [

@@ -8,6 +8,7 @@ use backend\models\Code;
 use backend\models\Goods;
 use backend\models\Icon;
 use backend\models\Message;
+use backend\models\SetImage;
 use backend\models\TestLog;
 use backend\models\UserGoods;
 use common\components\Helper;
@@ -34,9 +35,11 @@ class IndexController extends ApiBaseController
         $data = [
             'banner' => [],
             'icon' => [],
+            'message'=>[],
         ];
         $banner = Icon::getList(['type' => 1]);
         $icon = Icon::getList(['type' => 3]);
+        $message=SetImage::getList(['type'=>5]);
         foreach ($banner as $k => $v) {
             $data['banner'][] = [
                 'image' => $this->setImg($v['image']),
@@ -56,6 +59,13 @@ class IndexController extends ApiBaseController
             ];
         }
 
+        foreach ($message as $k => $v) {
+            $data['message'][] = [
+                'message_id'=>$v->id,
+                'title' => $v->title,
+            ];
+        }
+
 
         $params=[
             'hot'=>1,//首页推荐
@@ -64,6 +74,25 @@ class IndexController extends ApiBaseController
         ];
         $goods = GoodsQueryService::searchModel($params);
         $data['goods']=$goods;
+
+
+        return $this->jsonSuccess($data);
+    }
+
+
+
+    public function actionDetail()
+    {
+
+
+
+        $message_id=Yii::$app->request->post('message_id','');
+        $model=SetImage::findOne($message_id);
+        $data['detail']=[
+            'title'=>$model['title'],
+            'content'=>Helper::imageUrl($model['info'], Yii::$app->request->hostInfo),
+            'time'=>date('Y-m-d H:i:s',$model['created_at'])
+        ];
 
 
         return $this->jsonSuccess($data);

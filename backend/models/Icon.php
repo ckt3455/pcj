@@ -34,7 +34,7 @@ class Icon extends \yii\db\ActiveRecord
     {
         return [
             [['sort', 'type', 'category'], 'integer'],
-            [['image', 'href', 'appid'], 'string', 'max' => 255],
+            [['image', 'href', 'appid','title','subtitle'], 'string', 'max' => 255],
         ];
     }
 
