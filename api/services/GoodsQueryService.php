@@ -119,7 +119,13 @@ class GoodsQueryService
             'sales'=>$goods->sales,
             'image'=>Helper::setImg($goods['thumb']),
             'has_option'=>$goods->has_option,
-            'sku'=>$sku
+            'sku'=>$sku,
+            'user_money'=>0,
+            'intro'=>$goods->intro,
+            'fahuo_message'=>'下单后7天内发货',
+            'service_message'=>'支持7天无理由退货',
+            'active_message'=>'暂无活动',
+            'content'=>Helper::imageUrl($goods->content,Yii::$app->request->hostInfo),
 
 
         ];
