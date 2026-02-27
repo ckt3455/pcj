@@ -35,7 +35,15 @@ class ApiBaseController extends Controller {
         }
 
         if (!$this->validateToken()) {
-            throw new \yii\web\BadRequestHttpException('token无效');
+
+            Yii::$app->response->statusCode = 401;
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            Yii::$app->response->data = [
+                'code' => 401,
+                'message' => 'token无效',
+                'data' => [],
+            ];
+            Yii::$app->end();
         }
 
         return parent::beforeAction($action);
